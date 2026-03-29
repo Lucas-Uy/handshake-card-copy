@@ -4,20 +4,20 @@ import { RoundedBox, Text, Float } from "@react-three/drei";
 import * as THREE from "three";
 
 function CardMesh({ name, status }: { name: string; status: string }) {
-  const meshRef = useRef<THREE.Mesh>(null);
+  const groupRef = useRef<THREE.Group>(null);
   const mouseRef = useRef({ x: 0, y: 0 });
 
   useFrame(({ pointer }) => {
-    if (!meshRef.current) return;
+    if (!groupRef.current) return;
     mouseRef.current.x = THREE.MathUtils.lerp(mouseRef.current.x, pointer.x * 0.3, 0.05);
     mouseRef.current.y = THREE.MathUtils.lerp(mouseRef.current.y, pointer.y * 0.2, 0.05);
-    meshRef.current.rotation.y = mouseRef.current.x;
-    meshRef.current.rotation.x = -mouseRef.current.y;
+    groupRef.current.rotation.y = mouseRef.current.x;
+    groupRef.current.rotation.x = -mouseRef.current.y;
   });
 
   return (
     <Float speed={2} rotationIntensity={0.15} floatIntensity={0.4}>
-      <group ref={meshRef}>
+      <group ref={groupRef}>
         {/* Card body */}
         <RoundedBox args={[3.4, 2.1, 0.08]} radius={0.12} smoothness={4}>
           <meshPhysicalMaterial
