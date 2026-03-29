@@ -19,6 +19,7 @@ const mainItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "NFC Cards", url: "/cards", icon: CreditCard },
   { title: "Interaction Logs", url: "/logs", icon: List },
+  { title: "Categories", url: "/categories", icon: Tag },
   { title: "Profile", url: "/profile", icon: User },
 ];
 
