@@ -68,14 +68,17 @@ const PublicProfilePage = () => {
   const handleDownloadCV = async () => {
     if (!profile?.cv_url) return;
 
-    // Log the CV download
-    supabase.from("interaction_logs").insert({
-      user_id: profile.user_id,
-      entity_id: `cv_download_${Date.now()}`,
-      interaction_type: "cv_download",
-      occasion: "CV Download",
-      metadata: { source: "public_landing", ua: navigator.userAgent },
-    }).then(() => {});
+    // Log via edge function
+    const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+    fetch(`https://${projectId}.supabase.co/functions/v1/log-interaction`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        target_user_id: profile.user_id,
+        interaction_type: "cv_download",
+        metadata: { source: "public_landing", ua: navigator.userAgent },
+      }),
+    }).catch(() => {});
 
     window.open(profile.cv_url, "_blank");
   };
