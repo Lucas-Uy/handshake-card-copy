@@ -7,6 +7,8 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index.tsx";
 import CardsPage from "./pages/CardsPage.tsx";
+import NfcManagerPage from "./pages/NfcManagerPage.tsx";
+import ShortUrlRedirect from "./pages/ShortUrlRedirect.tsx";
 import LogsPage from "./pages/LogsPage.tsx";
 import CategoriesPage from "./pages/CategoriesPage.tsx";
 import ProfilePage from "./pages/ProfilePage.tsx";
