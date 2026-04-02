@@ -16,6 +16,7 @@ interface PersonaData {
   id: string;
   slug: string;
   label: string;
+  is_active: boolean;
   is_private: boolean;
   pin_code: string | null;
   require_contact_exchange: boolean;
