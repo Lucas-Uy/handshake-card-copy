@@ -75,7 +75,7 @@ export function InteractiveCard3D({
       {/* Card container — fluid width, credit-card aspect ratio, deep perspective */}
       <div
         ref={cardRef}
-        className="w-full max-w-[420px] cursor-pointer"
+        className="w-full max-w-[420px] cursor-pointer text-[clamp(14px,3.5vw,18px)]"
         style={{ perspective: "1500px", aspectRatio: "1.58 / 1" }}
         onMouseMove={handleMouseMove}
         onTouchMove={handleMouseMove}
