@@ -5,10 +5,6 @@ import { Activity } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useChartPalette } from "@/components/dashboard/ChartPaletteSelector";
 import type { Timeframe } from "@/hooks/useNfcData";
-import { Button } from "@/components/ui/button";
-import { Activity } from "lucide-react";
-import { cn } from "@/lib/utils";
-import type { Timeframe } from "@/hooks/useNfcData";
 
 interface AnalyticsChartProps {
   data: { label: string; taps: number; vcards: number }[];
