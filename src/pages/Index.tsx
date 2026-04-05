@@ -176,6 +176,10 @@ const Dashboard = () => {
               <DeviceDonutChart data={stats.osBreakdown} title="Operating System" />
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <TapVelocityChart data={stats.tapVelocity} />
+              <GeographicInsights data={stats.regionBreakdown} />
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <ActivityHeatmap data={stats.hourlyHeat} />
               <ConnectionSourceChart sources={stats.connectionSources} />
             </div>
