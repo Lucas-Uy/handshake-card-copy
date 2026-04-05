@@ -12,6 +12,8 @@ import { PersonaBarChart } from "@/components/dashboard/PersonaBarChart";
 import { ConversionFunnel } from "@/components/dashboard/ConversionFunnel";
 import { ExportButton } from "@/components/dashboard/ExportButton";
 import { LeadGenTracker } from "@/components/dashboard/LeadGenTracker";
+import { TapVelocityChart } from "@/components/dashboard/TapVelocityChart";
+import { GeographicInsights } from "@/components/dashboard/GeographicInsights";
 import { ChartPaletteProvider, ChartPaletteSelector } from "@/components/dashboard/ChartPaletteSelector";
 import { useNfcData } from "@/hooks/useNfcData";
 import { useAuth } from "@/contexts/AuthContext";
