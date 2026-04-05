@@ -124,6 +124,14 @@ const PublicProfilePage = () => {
 
       setProfile(profileData as ProfileData);
 
+      // Check if profile owner is Pro
+      const { data: subData } = await supabase
+        .from("user_subscriptions")
+        .select("plan")
+        .eq("user_id", profileData.user_id)
+        .single();
+      setOwnerIsPro(subData?.plan === "pro");
+
       if (personaSlug) {
         const { data: personaData } = await supabase
           .from("personas")
