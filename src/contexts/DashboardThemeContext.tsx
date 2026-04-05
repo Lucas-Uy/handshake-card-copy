@@ -143,7 +143,11 @@ export function DashboardThemeProvider({ children }: { children: ReactNode }) {
 
   const [systemPref, setSystemPref] = useState<"dark" | "light">(getSystemPreference);
 
-  const resolvedColorMode: "dark" | "light" = colorMode === "system" ? systemPref : colorMode;
+  // Light/dark theme directly determines color mode; other themes use stored colorMode
+  const resolvedColorMode: "dark" | "light" =
+    theme === "light" ? "light" :
+    theme === "dark" ? "dark" :
+    colorMode === "system" ? systemPref : colorMode;
 
   const setTheme = (t: DashboardTheme) => {
     setThemeState(t);
