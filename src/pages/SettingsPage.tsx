@@ -23,7 +23,7 @@ import { getCookiePrefs, saveCookiePrefs, type CookiePrefs } from "@/components/
 const NOTIF_KEY = "notification_prefs";
 
 const SettingsPage = () => {
-  const { theme, setTheme, colorMode, setColorMode } = useDashboardTheme();
+  const { theme, setTheme, colorMode, setColorMode, resolvedColorMode } = useDashboardTheme();
   const { user, signOut } = useAuth();
   const { toast } = useToast();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
