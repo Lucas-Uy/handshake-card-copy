@@ -64,6 +64,7 @@ interface CardBackProps {
   isFlipped: boolean;
   linkedinUrl?: string;
   onFlipBack: () => void;
+  onLinkClick?: (linkType: string) => void;
   profileUrl: string;
   username: string;
   website?: string;
