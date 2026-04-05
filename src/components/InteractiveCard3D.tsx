@@ -200,6 +200,7 @@ export const InteractiveCard3D = forwardRef<HTMLDivElement, InteractiveCard3DPro
               secondaryColor={resolvedSecondary}
               textColor={textColor}
               cardBgImageUrl={cardBgImageUrl}
+              cardBgSize={cardBgSize}
               glassOpacity={glassOpacity}
               avatarUrl={avatarUrl}
               glareBackground={glareBackground}
