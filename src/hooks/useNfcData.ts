@@ -104,6 +104,8 @@ export function useNfcData() {
     deviceBreakdown: [], browserBreakdown: [], osBreakdown: [],
     hourlyHeat: [], linkCTR: [], personaPerformance: [],
     connectionSources: { nfc: 0, qr: 0, direct: 0 },
+    tapVelocity: [],
+    regionBreakdown: [],
   });
   const [loading, setLoading] = useState(true);
 
