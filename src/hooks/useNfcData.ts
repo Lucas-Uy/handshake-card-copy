@@ -196,6 +196,13 @@ export function useNfcData() {
       browsers.set(browser, (browsers.get(browser) ?? 0) + 1);
       oses.set(os, (oses.get(os) ?? 0) + 1);
 
+      // Region from timezone
+      const tz = meta.timezone as string | undefined;
+      if (tz) {
+        const region = tz.replace(/_/g, " ").split("/").slice(-1)[0] || tz;
+        regions.set(region, (regions.get(region) ?? 0) + 1);
+      }
+
       // Location
       const loc = log.location ?? "Unknown";
       locations.set(loc, (locations.get(loc) ?? 0) + 1);
