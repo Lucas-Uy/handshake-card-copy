@@ -1,6 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
-import { Smartphone, Monitor, Tablet } from "lucide-react";
 
 interface DeviceDonutChartProps {
   data: { name: string; value: number; color: string }[];
@@ -31,16 +30,7 @@ export function DeviceDonutChart({ data, title }: DeviceDonutChartProps) {
       <CardContent>
         <ResponsiveContainer width="100%" height={200}>
           <PieChart>
-            <Pie
-              data={data}
-              cx="50%"
-              cy="50%"
-              innerRadius={45}
-              outerRadius={75}
-              paddingAngle={3}
-              dataKey="value"
-              stroke="none"
-            >
+            <Pie data={data} cx="50%" cy="50%" innerRadius={45} outerRadius={75} paddingAngle={3} dataKey="value" stroke="none">
               {data.map((entry, i) => (
                 <Cell key={i} fill={entry.color} />
               ))}
@@ -51,10 +41,13 @@ export function DeviceDonutChart({ data, title }: DeviceDonutChartProps) {
                 border: "1px solid hsl(var(--border))",
                 borderRadius: "8px",
                 fontSize: "12px",
+                color: "hsl(var(--foreground))",
               }}
+              labelStyle={{ color: "hsl(var(--foreground))" }}
+              itemStyle={{ color: "hsl(var(--foreground))" }}
               formatter={(value: number) => [`${value} (${Math.round((value / total) * 100)}%)`, ""]}
             />
-            <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: "11px" }} />
+            <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: "11px", color: "hsl(var(--foreground))" }} />
           </PieChart>
         </ResponsiveContainer>
       </CardContent>

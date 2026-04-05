@@ -54,18 +54,21 @@ export function AnalyticsChart({ data, timeframe, onTimeframeChange }: Analytics
                   <stop offset="95%" stopColor="hsl(221, 83%, 53%)" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 13%, 89%)" strokeOpacity={0.4} />
-              <XAxis dataKey="label" tick={{ fontSize: 10, fill: "hsl(220, 10%, 46%)" }} tickLine={false} axisLine={false} />
-              <YAxis tick={{ fontSize: 10, fill: "hsl(220, 10%, 46%)" }} tickLine={false} axisLine={false} allowDecimals={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.5} />
+              <XAxis dataKey="label" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
+              <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} allowDecimals={false} />
               <Tooltip
                 contentStyle={{
                   background: "hsl(var(--card))",
                   border: "1px solid hsl(var(--border))",
                   borderRadius: "8px",
                   fontSize: 12,
+                  color: "hsl(var(--foreground))",
                 }}
+                labelStyle={{ color: "hsl(var(--foreground))" }}
+                itemStyle={{ color: "hsl(var(--foreground))" }}
               />
-              <Legend wrapperStyle={{ fontSize: "11px" }} />
+              <Legend wrapperStyle={{ fontSize: "11px", color: "hsl(var(--foreground))" }} />
               <Area type="monotone" dataKey="taps" name="Profile Views" stroke="hsl(174, 72%, 40%)" strokeWidth={2} fill="url(#tapGrad)" />
               <Area type="monotone" dataKey="vcards" name="vCard Saves" stroke="hsl(221, 83%, 53%)" strokeWidth={2} fill="url(#vcardGrad)" />
             </AreaChart>
