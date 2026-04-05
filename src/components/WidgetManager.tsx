@@ -124,9 +124,7 @@ export function WidgetManager({ stats }: WidgetManagerProps) {
 
   const getValue = useCallback((key: WidgetKey): string => {
     switch (key) {
-      case "totalTaps": return stats.totalTaps.toLocaleString();
       case "uniqueVisitors": return stats.uniqueVisitors.toLocaleString();
-      case "contactSaveRate": return `${stats.contactSaveRate}%`;
       case "topDevice": return stats.topDevice;
       case "profileViews": return stats.profileViews.toLocaleString();
       case "vcardDownloads": return stats.vcardDownloads.toLocaleString();

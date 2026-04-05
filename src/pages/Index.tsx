@@ -222,6 +222,7 @@ const Dashboard = () => {
         </Tabs>
       </div>
     </DashboardLayout>
+    </ChartPaletteProvider>
   );
 };
 
