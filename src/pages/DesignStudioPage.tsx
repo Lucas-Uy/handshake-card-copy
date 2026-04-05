@@ -5,47 +5,28 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
+import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { InteractiveCard3D } from "@/components/InteractiveCard3D";
-import { Loader2, Monitor, Smartphone, Palette, Save, Eye } from "lucide-react";
-
-const BACKGROUND_PRESETS = [
-  { id: "default", label: "Default", css: "none" },
-  { id: "carbon", label: "Carbon Fiber", css: "repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(255,255,255,0.02) 3px, rgba(255,255,255,0.02) 6px)" },
-  { id: "mesh", label: "Mesh Gradient", css: "radial-gradient(at 40% 20%, hsla(178,80%,40%,0.3) 0px, transparent 50%), radial-gradient(at 80% 60%, hsla(280,60%,50%,0.2) 0px, transparent 50%)" },
-  { id: "cyberpunk", label: "Cyberpunk Grid", css: "linear-gradient(rgba(0,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,255,0.03) 1px, transparent 1px)" },
-  { id: "marble", label: "Minimalist Marble", css: "linear-gradient(135deg, rgba(255,255,255,0.05) 25%, transparent 25%), linear-gradient(225deg, rgba(255,255,255,0.05) 25%, transparent 25%)" },
-  { id: "holo", label: "Holographic", css: "linear-gradient(135deg, rgba(255,0,128,0.15), rgba(0,255,255,0.15), rgba(128,0,255,0.15))" },
-];
-
-interface PersonaPreview {
-  id: string;
-  slug: string;
-  label: string;
-  display_name: string | null;
-  headline: string | null;
-  bio: string | null;
-  avatar_url: string | null;
-  email_public: string | null;
-  phone: string | null;
-  location: string | null;
-  website: string | null;
-  linkedin_url: string | null;
-  github_url: string | null;
-  accent_color: string | null;
-  background_preset: string | null;
-  glass_opacity: number | null;
-}
+import { ColorPickerField } from "@/components/DesignStudio/ColorPickerField";
+import { ImageUploadField } from "@/components/DesignStudio/ImageUploadField";
+import { BACKGROUND_PRESETS, getPresetCss } from "@/components/DesignStudio/BackgroundPresets";
+import type { PersonaDesign } from "@/components/DesignStudio/types";
+import {
+  Loader2, Monitor, Smartphone, Palette, Save, Eye,
+  CreditCard, Layout, Type,
+} from "lucide-react";
 
 const DesignStudioPage = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [personas, setPersonas] = useState<PersonaPreview[]>([]);
+  const [personas, setPersonas] = useState<PersonaDesign[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [editing, setEditing] = useState<PersonaPreview | null>(null);
+  const [editing, setEditing] = useState<PersonaDesign | null>(null);
   const [username, setUsername] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -58,7 +39,7 @@ const DesignStudioPage = () => {
         supabase.from("personas").select("*").eq("user_id", user.id).order("created_at"),
         supabase.from("profiles").select("username").eq("user_id", user.id).single(),
       ]);
-      const list = (personaData as PersonaPreview[]) ?? [];
+      const list = (personaData as PersonaDesign[]) ?? [];
       setPersonas(list);
       setUsername(profile?.username ?? "");
       if (list.length > 0) {
@@ -75,7 +56,7 @@ const DesignStudioPage = () => {
     if (p) setEditing({ ...p });
   }, [selectedId]);
 
-  const update = (field: keyof PersonaPreview, value: unknown) => {
+  const update = (field: keyof PersonaDesign, value: unknown) => {
     if (!editing) return;
     setEditing({ ...editing, [field]: value });
   };
@@ -83,10 +64,8 @@ const DesignStudioPage = () => {
   const handleSave = async () => {
     if (!editing) return;
     setSaving(true);
-    const { id, ...rest } = editing;
-    const updateData: Record<string, unknown> = { ...rest };
-    delete updateData.id;
-    const { error } = await supabase.from("personas").update(updateData).eq("id", id);
+    const { id, slug, label, ...rest } = editing;
+    const { error } = await supabase.from("personas").update(rest as Record<string, unknown>).eq("id", id);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
@@ -96,7 +75,7 @@ const DesignStudioPage = () => {
     setSaving(false);
   };
 
-  const presetCss = BACKGROUND_PRESETS.find((p) => p.id === editing?.background_preset)?.css ?? "none";
+  const presetCss = getPresetCss(editing?.background_preset);
 
   if (loading) {
     return (
@@ -126,7 +105,8 @@ const DesignStudioPage = () => {
   return (
     <DashboardLayout>
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
+        {/* Header */}
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <div>
             <h1 className="text-2xl font-display font-bold">Design Studio</h1>
             <p className="text-sm text-muted-foreground mt-1">Customize your persona's visual identity in real-time</p>
@@ -151,108 +131,189 @@ const DesignStudioPage = () => {
 
         {/* Split-screen layout */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* LEFT: Controls */}
-          <div className="space-y-4">
-            <Card className="glass-card">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-display">Identity</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="space-y-1">
-                  <Label>Display Name</Label>
-                  <Input value={editing?.display_name ?? ""} onChange={(e) => update("display_name", e.target.value)} />
-                </div>
-                <div className="space-y-1">
-                  <Label>Headline</Label>
-                  <Input value={editing?.headline ?? ""} onChange={(e) => update("headline", e.target.value)} placeholder="Full-Stack Developer" />
-                </div>
-                <div className="space-y-1">
-                  <Label>Bio</Label>
-                  <Input value={editing?.bio ?? ""} onChange={(e) => update("bio", e.target.value)} />
-                </div>
-              </CardContent>
-            </Card>
+          {/* LEFT: Controls — organized in tabs */}
+          <Tabs defaultValue="card" className="space-y-4">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="card" className="text-xs gap-1">
+                <CreditCard className="w-3.5 h-3.5" /> Card
+              </TabsTrigger>
+              <TabsTrigger value="landing" className="text-xs gap-1">
+                <Layout className="w-3.5 h-3.5" /> Landing Page
+              </TabsTrigger>
+              <TabsTrigger value="identity" className="text-xs gap-1">
+                <Type className="w-3.5 h-3.5" /> Identity
+              </TabsTrigger>
+            </TabsList>
 
-            <Card className="glass-card">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-display flex items-center gap-2">
-                  <Palette className="w-4 h-4" /> Card Appearance
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-1">
-                  <Label>Accent Color</Label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="color"
+            {/* ── Card Tab ── */}
+            <TabsContent value="card" className="space-y-4">
+              <Card className="glass-card">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-display flex items-center gap-2">
+                    <Palette className="w-4 h-4" /> Card Colors
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <ColorPickerField
+                      label="Primary / Accent"
                       value={editing?.accent_color ?? "#0d9488"}
-                      onChange={(e) => update("accent_color", e.target.value)}
-                      className="w-10 h-10 rounded-lg border border-border cursor-pointer"
+                      onChange={(v) => update("accent_color", v)}
                     />
-                    <Input
-                      value={editing?.accent_color ?? "#0d9488"}
-                      onChange={(e) => update("accent_color", e.target.value)}
-                      className="w-28 font-mono text-xs"
+                    <ColorPickerField
+                      label="Secondary"
+                      value={editing?.secondary_color ?? editing?.accent_color ?? "#0d9488"}
+                      onChange={(v) => update("secondary_color", v)}
+                    />
+                    <ColorPickerField
+                      label="Tertiary"
+                      value={editing?.tertiary_color ?? editing?.accent_color ?? "#0d9488"}
+                      onChange={(v) => update("tertiary_color", v)}
+                    />
+                    <ColorPickerField
+                      label="Text Color"
+                      value={editing?.text_color ?? "#ffffff"}
+                      onChange={(v) => update("text_color", v)}
                     />
                   </div>
-                </div>
 
-                <div className="space-y-1">
-                  <Label>Background Preset</Label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {BACKGROUND_PRESETS.map((preset) => (
-                      <button
-                        key={preset.id}
-                        onClick={() => update("background_preset", preset.id)}
-                        className={`p-2.5 rounded-lg border text-xs text-center transition-colors ${
-                          editing?.background_preset === preset.id
-                            ? "border-primary bg-primary/10"
-                            : "border-border hover:border-primary/40"
-                        }`}
-                      >
-                        {preset.label}
-                      </button>
-                    ))}
+                  <Separator />
+
+                  <div className="space-y-2">
+                    <Label>Card Glass Opacity: {Math.round((editing?.glass_opacity ?? 0.15) * 100)}%</Label>
+                    <p className="text-[10px] text-muted-foreground">Controls the frosted-glass overlay on the card surface</p>
+                    <Slider
+                      value={[(editing?.glass_opacity ?? 0.15) * 100]}
+                      onValueChange={([v]) => update("glass_opacity", v / 100)}
+                      min={0}
+                      max={80}
+                      step={5}
+                    />
                   </div>
-                </div>
+                </CardContent>
+              </Card>
 
-                <div className="space-y-2">
-                  <Label>Glass Opacity: {Math.round((editing?.glass_opacity ?? 0.15) * 100)}%</Label>
-                  <Slider
-                    value={[(editing?.glass_opacity ?? 0.15) * 100]}
-                    onValueChange={([v]) => update("glass_opacity", v / 100)}
-                    min={0}
-                    max={80}
-                    step={5}
+              <Card className="glass-card">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-display">Card Background Image</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ImageUploadField
+                    label="Card Face Background"
+                    value={editing?.card_bg_image_url ?? null}
+                    onChange={(url) => update("card_bg_image_url", url)}
+                    folder="card-bg"
                   />
-                </div>
-              </CardContent>
-            </Card>
+                  <p className="text-[10px] text-muted-foreground mt-2">
+                    Replaces the gradient with your own image on the card face.
+                  </p>
+                </CardContent>
+              </Card>
+            </TabsContent>
 
-            <Card className="glass-card">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-display">Socials</CardTitle>
-              </CardHeader>
-              <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <Label>Email</Label>
-                  <Input value={editing?.email_public ?? ""} onChange={(e) => update("email_public", e.target.value)} />
-                </div>
-                <div className="space-y-1">
-                  <Label>Website</Label>
-                  <Input value={editing?.website ?? ""} onChange={(e) => update("website", e.target.value)} />
-                </div>
-                <div className="space-y-1">
-                  <Label>LinkedIn</Label>
-                  <Input value={editing?.linkedin_url ?? ""} onChange={(e) => update("linkedin_url", e.target.value)} />
-                </div>
-                <div className="space-y-1">
-                  <Label>GitHub</Label>
-                  <Input value={editing?.github_url ?? ""} onChange={(e) => update("github_url", e.target.value)} />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+            {/* ── Landing Page Tab ── */}
+            <TabsContent value="landing" className="space-y-4">
+              <Card className="glass-card">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-display">Landing Page Background</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <ColorPickerField
+                    label="Background Color"
+                    value={editing?.landing_bg_color ?? "#0a0a0f"}
+                    onChange={(v) => update("landing_bg_color", v)}
+                  />
+
+                  <Separator />
+
+                  <div className="space-y-2">
+                    <Label>Background Preset Overlay</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {BACKGROUND_PRESETS.map((preset) => (
+                        <button
+                          key={preset.id}
+                          onClick={() => update("background_preset", preset.id)}
+                          className={`relative p-3 rounded-lg border text-xs text-center transition-colors overflow-hidden ${
+                            editing?.background_preset === preset.id
+                              ? "border-primary bg-primary/10 ring-1 ring-primary"
+                              : "border-border hover:border-primary/40"
+                          }`}
+                        >
+                          {/* Mini preview swatch */}
+                          {preset.css !== "none" && (
+                            <div
+                              className="absolute inset-0 opacity-60"
+                              style={{ backgroundImage: preset.css, backgroundColor: "#111" }}
+                            />
+                          )}
+                          <span className="relative">{preset.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <ImageUploadField
+                    label="Background Image"
+                    value={editing?.background_image_url ?? null}
+                    onChange={(url) => update("background_image_url", url)}
+                    folder="landing-bg"
+                  />
+                  <p className="text-[10px] text-muted-foreground">
+                    Overrides the color & preset with a full-bleed background image.
+                  </p>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* ── Identity Tab ── */}
+            <TabsContent value="identity" className="space-y-4">
+              <Card className="glass-card">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-display">Profile Info</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="space-y-1">
+                    <Label>Display Name</Label>
+                    <Input value={editing?.display_name ?? ""} onChange={(e) => update("display_name", e.target.value)} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Headline</Label>
+                    <Input value={editing?.headline ?? ""} onChange={(e) => update("headline", e.target.value)} placeholder="Full-Stack Developer" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Bio</Label>
+                    <Input value={editing?.bio ?? ""} onChange={(e) => update("bio", e.target.value)} />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="glass-card">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-display">Socials</CardTitle>
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label>Email</Label>
+                    <Input value={editing?.email_public ?? ""} onChange={(e) => update("email_public", e.target.value)} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Website</Label>
+                    <Input value={editing?.website ?? ""} onChange={(e) => update("website", e.target.value)} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>LinkedIn</Label>
+                    <Input value={editing?.linkedin_url ?? ""} onChange={(e) => update("linkedin_url", e.target.value)} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>GitHub</Label>
+                    <Input value={editing?.github_url ?? ""} onChange={(e) => update("github_url", e.target.value)} />
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
 
           {/* RIGHT: Live Preview */}
           <div className="space-y-3">
@@ -262,20 +323,10 @@ const DesignStudioPage = () => {
                 <span className="text-sm font-display font-semibold">Live Preview</span>
               </div>
               <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
-                <Button
-                  size="sm"
-                  variant={deviceMode === "desktop" ? "default" : "ghost"}
-                  className="h-7 px-2"
-                  onClick={() => setDeviceMode("desktop")}
-                >
+                <Button size="sm" variant={deviceMode === "desktop" ? "default" : "ghost"} className="h-7 px-2" onClick={() => setDeviceMode("desktop")}>
                   <Monitor className="w-3.5 h-3.5" />
                 </Button>
-                <Button
-                  size="sm"
-                  variant={deviceMode === "mobile" ? "default" : "ghost"}
-                  className="h-7 px-2"
-                  onClick={() => setDeviceMode("mobile")}
-                >
+                <Button size="sm" variant={deviceMode === "mobile" ? "default" : "ghost"} className="h-7 px-2" onClick={() => setDeviceMode("mobile")}>
                   <Smartphone className="w-3.5 h-3.5" />
                 </Button>
               </div>
@@ -289,11 +340,17 @@ const DesignStudioPage = () => {
                     : "w-full min-h-[500px]"
                 }`}
                 style={{
-                  backgroundImage: presetCss !== "none" ? presetCss : undefined,
-                  backgroundColor: "hsl(var(--background))",
+                  backgroundColor: editing?.landing_bg_color ?? "hsl(var(--background))",
+                  backgroundImage: editing?.background_image_url
+                    ? `url(${editing.background_image_url})`
+                    : presetCss !== "none"
+                    ? presetCss
+                    : undefined,
+                  backgroundSize: editing?.background_image_url ? "cover" : undefined,
+                  backgroundPosition: editing?.background_image_url ? "center" : undefined,
                 }}
               >
-                {/* Simulated landing page preview — mirrors the public page hero */}
+                {/* Simulated landing page preview */}
                 <div className="relative flex flex-col items-center justify-center min-h-[400px] p-6">
                   {/* Ambient glow */}
                   <div
@@ -305,7 +362,7 @@ const DesignStudioPage = () => {
 
                   <div className="flex items-center gap-2 absolute top-4">
                     <div className="w-5 h-5 rounded-md flex items-center justify-center" style={{ background: editing?.accent_color ?? "#0d9488" }}>
-                      <span className="text-[8px] text-white font-bold">N</span>
+                      <span className="text-[8px] font-bold" style={{ color: editing?.text_color ?? "#fff" }}>N</span>
                     </div>
                     <span className="text-[10px] font-display font-semibold tracking-widest uppercase text-muted-foreground">
                       NFC Hub
@@ -318,6 +375,11 @@ const DesignStudioPage = () => {
                     avatarUrl={editing?.avatar_url ?? undefined}
                     username={username}
                     accentColor={editing?.accent_color ?? "#0d9488"}
+                    secondaryColor={editing?.secondary_color ?? undefined}
+                    tertiaryColor={editing?.tertiary_color ?? undefined}
+                    textColor={editing?.text_color ?? "#ffffff"}
+                    cardBgImageUrl={editing?.card_bg_image_url ?? undefined}
+                    glassOpacity={editing?.glass_opacity ?? 0.15}
                     linkedinUrl={editing?.linkedin_url ?? undefined}
                     githubUrl={editing?.github_url ?? undefined}
                     website={editing?.website ?? undefined}
@@ -331,18 +393,11 @@ const DesignStudioPage = () => {
                       {editing?.headline && <p className="text-[10px] text-muted-foreground">{editing.headline}</p>}
                     </div>
                     {editing?.bio && (
-                      <div
-                        className="rounded-lg p-2 text-[10px] leading-relaxed"
-                        style={{
-                          background: `rgba(255,255,255,${editing.glass_opacity ?? 0.15})`,
-                          backdropFilter: "blur(12px)",
-                          border: "1px solid rgba(255,255,255,0.1)",
-                        }}
-                      >
+                      <div className="glass-card rounded-lg p-2 text-[10px] leading-relaxed">
                         {editing.bio}
                       </div>
                     )}
-                    <Button size="sm" className="w-full text-primary-foreground text-xs" style={{ background: editing?.accent_color ?? "#0d9488" }}>
+                    <Button size="sm" className="w-full text-xs" style={{ background: editing?.accent_color ?? "#0d9488", color: editing?.text_color ?? "#fff" }}>
                       Save Contact
                     </Button>
                   </div>

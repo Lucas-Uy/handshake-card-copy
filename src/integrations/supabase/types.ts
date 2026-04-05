@@ -187,6 +187,7 @@ export type Database = {
           background_image_url: string | null
           background_preset: string | null
           bio: string | null
+          card_bg_image_url: string | null
           created_at: string
           cv_url: string | null
           display_name: string | null
@@ -198,14 +199,18 @@ export type Database = {
           is_active: boolean
           is_private: boolean
           label: string
+          landing_bg_color: string | null
           linkedin_url: string | null
           location: string | null
           phone: string | null
           pin_code: string | null
           require_contact_exchange: boolean
+          secondary_color: string | null
           show_availability: boolean | null
           show_location: boolean | null
           slug: string
+          tertiary_color: string | null
+          text_color: string | null
           updated_at: string
           user_id: string
           website: string | null
@@ -218,6 +223,7 @@ export type Database = {
           background_image_url?: string | null
           background_preset?: string | null
           bio?: string | null
+          card_bg_image_url?: string | null
           created_at?: string
           cv_url?: string | null
           display_name?: string | null
@@ -229,14 +235,18 @@ export type Database = {
           is_active?: boolean
           is_private?: boolean
           label?: string
+          landing_bg_color?: string | null
           linkedin_url?: string | null
           location?: string | null
           phone?: string | null
           pin_code?: string | null
           require_contact_exchange?: boolean
+          secondary_color?: string | null
           show_availability?: boolean | null
           show_location?: boolean | null
           slug: string
+          tertiary_color?: string | null
+          text_color?: string | null
           updated_at?: string
           user_id: string
           website?: string | null
@@ -249,6 +259,7 @@ export type Database = {
           background_image_url?: string | null
           background_preset?: string | null
           bio?: string | null
+          card_bg_image_url?: string | null
           created_at?: string
           cv_url?: string | null
           display_name?: string | null
@@ -260,14 +271,18 @@ export type Database = {
           is_active?: boolean
           is_private?: boolean
           label?: string
+          landing_bg_color?: string | null
           linkedin_url?: string | null
           location?: string | null
           phone?: string | null
           pin_code?: string | null
           require_contact_exchange?: boolean
+          secondary_color?: string | null
           show_availability?: boolean | null
           show_location?: boolean | null
           slug?: string
+          tertiary_color?: string | null
+          text_color?: string | null
           updated_at?: string
           user_id?: string
           website?: string | null

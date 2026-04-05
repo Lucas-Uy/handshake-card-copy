@@ -6,6 +6,7 @@ import { InteractiveCard3D } from "@/components/InteractiveCard3D";
 import { SecurityGate } from "@/components/SecurityGate";
 import { CardDisabledPage } from "@/components/CardDisabledPage";
 import { downloadVCard } from "@/lib/vcard";
+import { getPresetCss } from "@/components/DesignStudio/BackgroundPresets";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -33,8 +34,13 @@ interface PersonaData {
   github_url: string | null;
   cv_url: string | null;
   accent_color: string | null;
+  secondary_color: string | null;
+  tertiary_color: string | null;
+  text_color: string | null;
+  landing_bg_color: string | null;
   background_preset: string | null;
   background_image_url: string | null;
+  card_bg_image_url: string | null;
   glass_opacity: number | null;
   availability_status: string | null;
   work_mode: string | null;
@@ -275,10 +281,25 @@ const PublicProfilePage = () => {
 
   const accentColor = merged.accent_color;
 
+  const landingBgColor = persona?.landing_bg_color || "#0a0a0f";
+  const bgPresetCss = getPresetCss(persona?.background_preset);
+  const bgImageUrl = persona?.background_image_url;
+
   return (
-    <div ref={containerRef} className="relative bg-background">
+    <div ref={containerRef} className="relative" style={{ backgroundColor: landingBgColor }}>
       {/* ── Hero Section: Full-screen 3D Card ── */}
-      <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden">
+      <section
+        className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden"
+        style={{
+          backgroundImage: bgImageUrl
+            ? `url(${bgImageUrl})`
+            : bgPresetCss !== "none"
+            ? bgPresetCss
+            : undefined,
+          backgroundSize: bgImageUrl ? "cover" : undefined,
+          backgroundPosition: bgImageUrl ? "center" : undefined,
+        }}
+      >
         {/* Ambient glow */}
         <div
           className="pointer-events-none absolute inset-0"
@@ -297,7 +318,7 @@ const PublicProfilePage = () => {
           <div className="w-6 h-6 rounded-md flex items-center justify-center" style={{ background: accentColor }}>
             <Wifi className="w-3 h-3 text-white" />
           </div>
-          <span className="text-xs font-display font-semibold tracking-widest uppercase text-muted-foreground">
+          <span className="text-xs font-display font-semibold tracking-widest uppercase" style={{ color: `${persona?.text_color ?? "#ffffff"}99` }}>
             NFC Hub
           </span>
           {persona && (
@@ -313,7 +334,6 @@ const PublicProfilePage = () => {
           transition={{ type: "spring", stiffness: 80, damping: 22, mass: 1.2, delay: 0.1 }}
           style={{ scale: cardScale, opacity: cardOpacity }}
         >
-          {/* Floating animation wrapper */}
           <motion.div
             animate={{ y: [0, -10, 0] }}
             transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
@@ -324,6 +344,11 @@ const PublicProfilePage = () => {
               avatarUrl={merged.avatar_url ?? undefined}
               username={username ?? ""}
               accentColor={accentColor}
+              secondaryColor={persona?.secondary_color ?? undefined}
+              tertiaryColor={persona?.tertiary_color ?? undefined}
+              textColor={persona?.text_color ?? "#ffffff"}
+              cardBgImageUrl={persona?.card_bg_image_url ?? undefined}
+              glassOpacity={persona?.glass_opacity ?? 0.15}
               linkedinUrl={merged.linkedin_url ?? undefined}
               githubUrl={merged.github_url ?? undefined}
               website={merged.website ?? undefined}
@@ -334,8 +359,8 @@ const PublicProfilePage = () => {
 
         {/* Scroll indicator */}
         <motion.div
-          className="absolute bottom-8 flex flex-col items-center gap-1 text-muted-foreground"
-          style={{ opacity: chevronOpacity }}
+          className="absolute bottom-8 flex flex-col items-center gap-1"
+          style={{ opacity: chevronOpacity, color: `${persona?.text_color ?? "#ffffff"}66` }}
         >
           <span className="text-[10px] font-medium uppercase tracking-widest">Scroll</span>
           <motion.div
