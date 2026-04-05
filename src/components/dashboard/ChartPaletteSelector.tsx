@@ -66,15 +66,10 @@ export function ChartPaletteProvider({ children }: { children: React.ReactNode }
 }
 
 export function ChartPaletteSelector() {
-  const { paletteId } = useChartPalette();
-  const [selected, setSelected] = useState(paletteId);
-
-  useEffect(() => setSelected(paletteId), [paletteId]);
+  const { paletteId, setPaletteId } = useChartPaletteFull();
 
   const apply = (id: PaletteId) => {
-    setSelected(id);
-    localStorage.setItem(STORAGE_KEY, id);
-    window.location.reload();
+    setPaletteId(id);
   };
 
   return (
