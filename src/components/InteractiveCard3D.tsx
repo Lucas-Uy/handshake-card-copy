@@ -46,6 +46,10 @@ interface CardFrontProps {
   isFlipped: boolean;
   name: string;
   onFlip: () => void;
+  fontFamily: string;
+  textAlignment: string;
+  cardBlur: number;
+  cardTexture: string;
 }
 
 interface CardBackProps {
