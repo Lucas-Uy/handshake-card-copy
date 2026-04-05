@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,10 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Paintbrush, Cookie, FileText, Shield, Check, LogOut, Trash2,
-  KeyRound, Bell, Sun, Moon, UserX,
+  KeyRound, Bell, Sun, Moon, UserX, User, Camera, Loader2, Save,
 } from "lucide-react";
 import { DeleteAccountDialog } from "@/components/DeleteAccountDialog";
 import { useDashboardTheme, DASHBOARD_THEMES, type DashboardTheme } from "@/contexts/DashboardThemeContext";
@@ -22,13 +24,96 @@ const NOTIF_KEY = "notification_prefs";
 
 const SettingsPage = () => {
   const { theme, setTheme, colorMode, setColorMode } = useDashboardTheme();
-  const { signOut } = useAuth();
+  const { user, signOut } = useAuth();
   const { toast } = useToast();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-  // Granular cookie prefs
-  const [cookiePrefs, setCookiePrefs] = useState<CookiePrefs>(getCookiePrefs);
+  // Profile state
+  const [profileLoading, setProfileLoading] = useState(true);
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [profile, setProfile] = useState({
+    display_name: "",
+    username: "",
+    email_public: "",
+    headline: "",
+    bio: "",
+    phone: "",
+    location: "",
+    website: "",
+    linkedin_url: "",
+    github_url: "",
+  });
 
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("*")
+      .eq("user_id", user.id)
+      .single()
+      .then(({ data }) => {
+        if (data) {
+          setAvatarUrl(data.avatar_url);
+          setProfile({
+            display_name: data.display_name ?? "",
+            username: data.username ?? "",
+            email_public: data.email_public ?? user.email ?? "",
+            headline: data.headline ?? "",
+            bio: data.bio ?? "",
+            phone: data.phone ?? "",
+            location: data.location ?? "",
+            website: data.website ?? "",
+            linkedin_url: data.linkedin_url ?? "",
+            github_url: data.github_url ?? "",
+          });
+        }
+        setProfileLoading(false);
+      });
+  }, [user]);
+
+  const updateField = (field: string, value: string) =>
+    setProfile((p) => ({ ...p, [field]: value }));
+
+  const handleProfileSave = async () => {
+    if (!user) return;
+    setProfileSaving(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update(profile)
+      .eq("user_id", user.id);
+    setProfileSaving(false);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Profile updated" });
+    }
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    setUploading(true);
+    const ext = file.name.split(".").pop();
+    const path = `${user.id}/avatar.${ext}`;
+    const { error: uploadError } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+    if (uploadError) {
+      toast({ title: "Upload failed", description: uploadError.message, variant: "destructive" });
+      setUploading(false);
+      return;
+    }
+    const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
+    const newUrl = `${urlData.publicUrl}?t=${Date.now()}`;
+    await supabase.from("profiles").update({ avatar_url: newUrl }).eq("user_id", user.id);
+    setAvatarUrl(newUrl);
+    toast({ title: "Avatar updated" });
+    setUploading(false);
+  };
+
+  // Cookie prefs
+  const [cookiePrefs, setCookiePrefs] = useState<CookiePrefs>(getCookiePrefs);
   const updateCookiePref = (key: keyof Omit<CookiePrefs, "essential">, value: boolean) => {
     const updated = { ...cookiePrefs, [key]: value };
     setCookiePrefs(updated);
@@ -36,7 +121,7 @@ const SettingsPage = () => {
     toast({ title: "Cookie preferences updated" });
   };
 
-  // Password change
+  // Password
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [changingPassword, setChangingPassword] = useState(false);
@@ -62,7 +147,7 @@ const SettingsPage = () => {
     localStorage.removeItem("nfc_widget_order");
     localStorage.removeItem("nfc_widget_visibility");
     localStorage.removeItem("cookie-consent");
-    toast({ title: "Local data cleared", description: "Widget layout and cookie preferences have been reset." });
+    toast({ title: "Local data cleared" });
     setCookiePrefs({ essential: true, analytics: false, functional: false });
   };
 
@@ -92,68 +177,159 @@ const SettingsPage = () => {
       <div className="space-y-6 max-w-2xl">
         <div>
           <h1 className="text-2xl font-display font-bold">Settings</h1>
-          <p className="text-sm text-muted-foreground mt-1">Manage your preferences, privacy, and appearance</p>
+          <p className="text-sm text-muted-foreground mt-1">Manage your profile, preferences, privacy, and appearance</p>
         </div>
 
-        {/* Appearance */}
+        {/* Profile */}
         <Card className="glass-card animate-fade-in">
           <CardHeader className="pb-3">
             <CardTitle className="font-display text-sm flex items-center gap-2">
-              <Paintbrush className="w-4 h-4" /> Appearance
+              <User className="w-4 h-4" /> Profile
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-5">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                {colorMode === "dark" ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
-                <div>
-                  <p className="text-sm font-medium">Color Mode</p>
-                  <p className="text-[10px] text-muted-foreground">
-                    {colorMode === "dark" ? "Dark mode active" : "Light mode active"}
-                  </p>
+            {profileLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : (
+              <>
+                {/* Avatar */}
+                <div className="flex items-center gap-4">
+                  <div className="relative group">
+                    <Avatar className="w-16 h-16">
+                      {avatarUrl && <AvatarImage src={avatarUrl} alt="Avatar" />}
+                      <AvatarFallback className="bg-accent text-accent-foreground text-xl font-display">
+                        {(profile.display_name || "U").slice(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploading}
+                      className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      {uploading ? <Loader2 className="w-5 h-5 text-white animate-spin" /> : <Camera className="w-5 h-5 text-white" />}
+                    </button>
+                    <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
+                  </div>
+                  <div>
+                    <p className="font-medium">{profile.display_name || "Unnamed"}</p>
+                    <p className="text-sm text-muted-foreground">{user?.email}</p>
+                    {profile.username && <p className="text-xs text-primary">/p/{profile.username}</p>}
+                  </div>
                 </div>
+
+                {/* Fields */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Display Name</Label>
+                    <Input value={profile.display_name} onChange={(e) => updateField("display_name", e.target.value)} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Username</Label>
+                    <Input value={profile.username} onChange={(e) => updateField("username", e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ""))} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Headline</Label>
+                    <Input value={profile.headline} onChange={(e) => updateField("headline", e.target.value)} placeholder="Full-Stack Developer" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Public Email</Label>
+                    <Input type="email" value={profile.email_public} onChange={(e) => updateField("email_public", e.target.value)} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Phone</Label>
+                    <Input value={profile.phone} onChange={(e) => updateField("phone", e.target.value)} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Location</Label>
+                    <Input value={profile.location} onChange={(e) => updateField("location", e.target.value)} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Website</Label>
+                    <Input value={profile.website} onChange={(e) => updateField("website", e.target.value)} placeholder="https://..." />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">LinkedIn</Label>
+                    <Input value={profile.linkedin_url} onChange={(e) => updateField("linkedin_url", e.target.value)} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">GitHub</Label>
+                    <Input value={profile.github_url} onChange={(e) => updateField("github_url", e.target.value)} />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5 md:col-span-2">
+                  <Label className="text-xs">Bio</Label>
+                  <Textarea value={profile.bio} onChange={(e) => updateField("bio", e.target.value)} placeholder="Tell the world about yourself…" rows={3} />
+                </div>
+
+                <Button size="sm" onClick={handleProfileSave} disabled={profileSaving}>
+                  {profileSaving ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Save className="w-4 h-4 mr-1.5" />}
+                  Save Profile
+                </Button>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Display — Light/Dark Mode */}
+        <Card className="glass-card animate-fade-in">
+          <CardHeader className="pb-3">
+            <CardTitle className="font-display text-sm flex items-center gap-2">
+              {colorMode === "dark" ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />} Display
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium">Dark Mode</p>
+                <p className="text-[10px] text-muted-foreground">
+                  {colorMode === "dark" ? "Dark mode is active" : "Light mode is active"}
+                </p>
               </div>
               <Switch
                 checked={colorMode === "dark"}
                 onCheckedChange={(checked) => setColorMode(checked ? "dark" : "light")}
               />
             </div>
+          </CardContent>
+        </Card>
 
-            <Separator />
-
-            <div>
-              <p className="text-sm text-muted-foreground mb-3">Dashboard Theme</p>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {(Object.entries(DASHBOARD_THEMES) as [DashboardTheme, typeof DASHBOARD_THEMES[DashboardTheme]][]).map(
-                  ([key, cfg]) => (
-                    <button
-                      key={key}
-                      onClick={() => setTheme(key)}
-                      className={`relative flex items-center gap-3 p-3 rounded-lg border transition-all ${
-                        theme === key
-                          ? "border-primary bg-primary/10"
-                          : "border-border hover:border-primary/40"
-                      }`}
-                    >
-                      <div className="flex gap-1 shrink-0">
-                        <span
-                          className="w-3.5 h-3.5 rounded-full border border-border"
-                          style={{ background: cfg.preview }}
-                        />
-                        <span
-                          className="w-3.5 h-3.5 rounded-full border border-border"
-                          style={{ background: cfg.secondary }}
-                        />
-                      </div>
-                      <div className="text-left min-w-0">
-                        <span className="text-sm font-medium block truncate">{cfg.label}</span>
-                        <p className="text-[10px] text-muted-foreground truncate">{cfg.description}</p>
-                      </div>
-                      {theme === key && <Check className="w-3.5 h-3.5 text-primary absolute top-2 right-2" />}
-                    </button>
-                  )
-                )}
-              </div>
+        {/* Theme */}
+        <Card className="glass-card animate-fade-in">
+          <CardHeader className="pb-3">
+            <CardTitle className="font-display text-sm flex items-center gap-2">
+              <Paintbrush className="w-4 h-4" /> Theme
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-xs text-muted-foreground mb-3">Choose a color theme for the dashboard</p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {(Object.entries(DASHBOARD_THEMES) as [DashboardTheme, typeof DASHBOARD_THEMES[DashboardTheme]][]).map(
+                ([key, cfg]) => (
+                  <button
+                    key={key}
+                    onClick={() => setTheme(key)}
+                    className={`relative flex items-center gap-3 p-3 rounded-lg border transition-all ${
+                      theme === key
+                        ? "border-primary bg-primary/10"
+                        : "border-border hover:border-primary/40"
+                    }`}
+                  >
+                    <div className="flex gap-1 shrink-0">
+                      <span className="w-3.5 h-3.5 rounded-full border border-border" style={{ background: cfg.preview }} />
+                      <span className="w-3.5 h-3.5 rounded-full border border-border" style={{ background: cfg.secondary }} />
+                    </div>
+                    <div className="text-left min-w-0">
+                      <span className="text-sm font-medium block truncate">{cfg.label}</span>
+                      <p className="text-[10px] text-muted-foreground truncate">{cfg.description}</p>
+                    </div>
+                    {theme === key && <Check className="w-3.5 h-3.5 text-primary absolute top-2 right-2" />}
+                  </button>
+                )
+              )}
             </div>
           </CardContent>
         </Card>
@@ -223,7 +399,7 @@ const SettingsPage = () => {
           </CardContent>
         </Card>
 
-        {/* Privacy & Cookies — Granular */}
+        {/* Privacy & Cookies */}
         <Card className="glass-card animate-fade-in">
           <CardHeader className="pb-3">
             <CardTitle className="font-display text-sm flex items-center gap-2">
@@ -232,9 +408,8 @@ const SettingsPage = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-xs text-muted-foreground">
-              In compliance with the <strong>Data Privacy Act (RA 10173)</strong>, you can manage which cookies are active. Essential cookies cannot be disabled.
+              In compliance with the <strong>Data Privacy Act (RA 10173)</strong>, you can manage which cookies are active.
             </p>
-
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div>
@@ -248,25 +423,17 @@ const SettingsPage = () => {
                   <p className="text-sm font-medium">Analytics Cookies</p>
                   <p className="text-[10px] text-muted-foreground">Anonymized usage patterns, page views & tap analytics</p>
                 </div>
-                <Switch
-                  checked={cookiePrefs.analytics}
-                  onCheckedChange={(v) => updateCookiePref("analytics", v)}
-                />
+                <Switch checked={cookiePrefs.analytics} onCheckedChange={(v) => updateCookiePref("analytics", v)} />
               </div>
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium">Functional Cookies</p>
                   <p className="text-[10px] text-muted-foreground">Theme preferences, widget layout & notification settings</p>
                 </div>
-                <Switch
-                  checked={cookiePrefs.functional}
-                  onCheckedChange={(v) => updateCookiePref("functional", v)}
-                />
+                <Switch checked={cookiePrefs.functional} onCheckedChange={(v) => updateCookiePref("functional", v)} />
               </div>
             </div>
-
             <Separator />
-
             <div className="flex items-center gap-3">
               <Button variant="outline" size="sm" className="text-xs" onClick={handleClearData}>
                 <Trash2 className="w-3 h-3 mr-1.5" />
@@ -286,12 +453,9 @@ const SettingsPage = () => {
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="text-xs text-muted-foreground mb-2">
-              Our platform operates in compliance with the <strong>Data Privacy Act of 2012 (RA 10173)</strong> of the Philippines.
+              Our platform operates in compliance with the <strong>Data Privacy Act of 2012 (RA 10173)</strong>.
             </p>
-            <Link
-              to="/terms"
-              className="flex items-center justify-between p-3 rounded-lg border border-border hover:border-primary/40 transition-colors group"
-            >
+            <Link to="/terms" className="flex items-center justify-between p-3 rounded-lg border border-border hover:border-primary/40 transition-colors group">
               <div className="flex items-center gap-3">
                 <Shield className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
                 <div>
@@ -301,10 +465,7 @@ const SettingsPage = () => {
               </div>
               <span className="text-xs text-muted-foreground">→</span>
             </Link>
-            <Link
-              to="/privacy"
-              className="flex items-center justify-between p-3 rounded-lg border border-border hover:border-primary/40 transition-colors group"
-            >
+            <Link to="/privacy" className="flex items-center justify-between p-3 rounded-lg border border-border hover:border-primary/40 transition-colors group">
               <div className="flex items-center gap-3">
                 <FileText className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
                 <div>
@@ -329,9 +490,7 @@ const SettingsPage = () => {
               <LogOut className="w-4 h-4 mr-1.5" />
               Sign Out
             </Button>
-
             <Separator />
-
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <UserX className="w-4 h-4 text-destructive" />
