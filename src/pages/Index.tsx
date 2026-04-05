@@ -30,18 +30,6 @@ const Dashboard = () => {
       .then(({ data }) => setRecentLogs(data ?? []));
   }, [user]);
 
-  const handleColorChange = async (color: string) => {
-    if (!user) return;
-    setAccentColor(color);
-    setSavingColor(true);
-    await supabase
-      .from("profiles")
-      .update({ card_accent_color: color } as any)
-      .eq("user_id", user.id);
-    setSavingColor(false);
-    toast({ title: "Theme updated", description: "Your card accent color has been saved." });
-  };
-
   const timeSince = (dateStr: string) => {
     const diff = Date.now() - new Date(dateStr).getTime();
     const mins = Math.floor(diff / 60000);
