@@ -23,6 +23,7 @@ const TIMEFRAMES: { label: string; value: Timeframe }[] = [
 ];
 
 export function AnalyticsChart({ data, timeframe, onTimeframeChange }: AnalyticsChartProps) {
+  const { colors } = useChartPalette();
   return (
     <Card className="glass-card animate-fade-in">
       <CardHeader className="pb-2">
