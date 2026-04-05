@@ -554,6 +554,7 @@ const DesignStudioPage = () => {
                     tertiaryColor={editing?.tertiary_color ?? undefined}
                     textColor={editing?.text_color ?? "#ffffff"}
                     cardBgImageUrl={editing?.card_bg_image_url ?? undefined}
+                    cardBgSize={editing?.card_bg_size ?? "cover"}
                     glassOpacity={editing?.glass_opacity ?? 0.15}
                     linkedinUrl={editing?.linkedin_url ?? undefined}
                     githubUrl={editing?.github_url ?? undefined}
