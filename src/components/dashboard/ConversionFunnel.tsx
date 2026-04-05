@@ -3,13 +3,15 @@ import { Filter } from "lucide-react";
 
 interface ConversionFunnelProps {
   profileViews: number;
+  cardFlips: number;
   linkClicks: number;
   vcardDownloads: number;
 }
 
-export function ConversionFunnel({ profileViews, linkClicks, vcardDownloads }: ConversionFunnelProps) {
+export function ConversionFunnel({ profileViews, cardFlips, linkClicks, vcardDownloads }: ConversionFunnelProps) {
   const steps = [
     { label: "Profile Views", value: profileViews, color: "hsl(var(--primary))" },
+    { label: "Card Flips", value: cardFlips, color: "hsl(180, 60%, 50%)" },
     { label: "Link Clicks", value: linkClicks, color: "hsl(200, 70%, 50%)" },
     { label: "Contact Saves", value: vcardDownloads, color: "hsl(262, 60%, 55%)" },
   ];

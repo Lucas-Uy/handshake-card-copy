@@ -134,6 +134,9 @@ export function WidgetManager({ stats }: WidgetManagerProps) {
       case "vcardDownloads": return stats.vcardDownloads.toLocaleString();
       case "cvDownloads": return stats.cvDownloads.toLocaleString();
       case "leadGenCount": return stats.leadGenCount.toLocaleString();
+      case "cardFlips": return stats.cardFlips.toLocaleString();
+      case "returnVisitorRate": return `${stats.returnVisitorRate}%`;
+      case "interactionDepthRate": return `${stats.interactionDepthRate}%`;
     }
   }, [stats]);
 
