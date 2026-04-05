@@ -11,6 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSubscription } from "@/hooks/useSubscription";
+import { UpgradePrompt } from "@/components/UpgradePrompt";
 import { supabase } from "@/integrations/supabase/client";
 import { InteractiveCard3D } from "@/components/InteractiveCard3D";
 import { ColorPickerField } from "@/components/DesignStudio/ColorPickerField";
