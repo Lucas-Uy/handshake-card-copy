@@ -362,6 +362,10 @@ const PublicProfilePage = () => {
               githubUrl={merged.github_url ?? undefined}
               website={merged.website ?? undefined}
               email={merged.email_public ?? undefined}
+              fontFamily={persona?.font_family ?? "Space Grotesk"}
+              textAlignment={persona?.text_alignment ?? "left"}
+              cardBlur={persona?.card_blur ?? 12}
+              cardTexture={persona?.card_texture ?? "none"}
             />
           </motion.div>
         </motion.div>
