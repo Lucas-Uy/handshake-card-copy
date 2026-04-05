@@ -104,6 +104,8 @@ export const InteractiveCard3D = forwardRef<HTMLDivElement, InteractiveCard3DPro
     textAlignment = "left",
     cardBlur = 12,
     cardTexture = "none",
+    onFlipToBack,
+    onLinkClick,
   },
   forwardedRef,
 ) {
