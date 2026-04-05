@@ -423,6 +423,8 @@ const PublicProfilePage = () => {
               textAlignment={persona?.text_alignment ?? "left"}
               cardBlur={persona?.card_blur ?? 12}
               cardTexture={persona?.card_texture ?? "none"}
+              onFlipToBack={trackCardFlip}
+              onLinkClick={trackLinkClick}
             />
           </motion.div>
         </motion.div>
