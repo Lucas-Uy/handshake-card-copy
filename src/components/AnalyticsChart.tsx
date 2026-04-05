@@ -75,8 +75,8 @@ export function AnalyticsChart({ data, timeframe, onTimeframeChange }: Analytics
                 itemStyle={{ color: "hsl(var(--foreground))" }}
               />
               <Legend wrapperStyle={{ fontSize: "11px", color: "hsl(var(--foreground))" }} />
-              <Area type="monotone" dataKey="taps" name="Profile Views" stroke="hsl(174, 72%, 40%)" strokeWidth={2} fill="url(#tapGrad)" />
-              <Area type="monotone" dataKey="vcards" name="vCard Saves" stroke="hsl(221, 83%, 53%)" strokeWidth={2} fill="url(#vcardGrad)" />
+              <Area type="monotone" dataKey="taps" name="Profile Views" stroke={colors[0]} strokeWidth={2} fill="url(#tapGrad)" />
+              <Area type="monotone" dataKey="vcards" name="vCard Saves" stroke={colors[1]} strokeWidth={2} fill="url(#vcardGrad)" />
             </AreaChart>
           </ResponsiveContainer>
         </div>
