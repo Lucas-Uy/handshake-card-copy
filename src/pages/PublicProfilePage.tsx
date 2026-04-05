@@ -6,6 +6,7 @@ import { InteractiveCard3D } from "@/components/InteractiveCard3D";
 import { SecurityGate } from "@/components/SecurityGate";
 import { CardDisabledPage } from "@/components/CardDisabledPage";
 import { downloadVCard } from "@/lib/vcard";
+import { getPresetCss } from "@/components/DesignStudio/BackgroundPresets";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
