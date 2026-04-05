@@ -289,6 +289,19 @@ const PublicProfilePage = () => {
     window.open(merged.cv_url, "_blank");
   };
 
+  const trackCardFlip = useCallback(() => {
+    const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+    fetch(`https://${projectId}.supabase.co/functions/v1/log-interaction`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        target_user_id: merged.user_id,
+        interaction_type: "card_flip",
+        metadata: { ua: navigator.userAgent, persona_slug: persona?.slug },
+      }),
+    }).catch(() => {});
+  }, [merged.user_id, persona?.slug]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
