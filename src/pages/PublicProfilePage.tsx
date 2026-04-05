@@ -285,10 +285,11 @@ const PublicProfilePage = () => {
   }
 
   const accentColor = merged.accent_color;
-
   const landingBgColor = persona?.landing_bg_color || "#0a0a0f";
   const bgPresetCss = getPresetCss(persona?.background_preset);
   const bgImageUrl = persona?.background_image_url;
+  const fontStack = getFontStack(persona?.font_family);
+  const googleFontUrl = getGoogleFontUrl(persona?.font_family);
 
   return (
     <div ref={containerRef} className="relative" style={{ backgroundColor: landingBgColor }}>
