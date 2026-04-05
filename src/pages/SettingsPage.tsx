@@ -274,26 +274,40 @@ const SettingsPage = () => {
           </CardContent>
         </Card>
 
-        {/* Display — Light/Dark Mode */}
+        {/* Display — Light/Dark/System Mode */}
         <Card className="glass-card animate-fade-in">
           <CardHeader className="pb-3">
             <CardTitle className="font-display text-sm flex items-center gap-2">
-              {colorMode === "dark" ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />} Display
+              {colorMode === "dark" ? <Moon className="w-4 h-4" /> : colorMode === "light" ? <Sun className="w-4 h-4" /> : <Monitor className="w-4 h-4" />} Display
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium">Dark Mode</p>
-                <p className="text-[10px] text-muted-foreground">
-                  {colorMode === "dark" ? "Dark mode is active" : "Light mode is active"}
-                </p>
-              </div>
-              <Switch
-                checked={colorMode === "dark"}
-                onCheckedChange={(checked) => setColorMode(checked ? "dark" : "light")}
-              />
+          <CardContent className="space-y-3">
+            <p className="text-xs text-muted-foreground">Choose how the interface appears</p>
+            <div className="grid grid-cols-3 gap-2">
+              {([
+                { value: "light" as const, label: "Light", icon: Sun },
+                { value: "dark" as const, label: "Dark", icon: Moon },
+                { value: "system" as const, label: "System", icon: Monitor },
+              ]).map(({ value, label, icon: Icon }) => (
+                <button
+                  key={value}
+                  onClick={() => setColorMode(value)}
+                  className={`flex flex-col items-center gap-1.5 p-3 rounded-lg border transition-all ${
+                    colorMode === value
+                      ? "border-primary bg-primary/10"
+                      : "border-border hover:border-primary/40"
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  <span className="text-xs font-medium">{label}</span>
+                </button>
+              ))}
             </div>
+            <p className="text-[10px] text-muted-foreground">
+              {colorMode === "system"
+                ? `Following system preference (currently ${resolvedColorMode})`
+                : `${colorMode === "dark" ? "Dark" : "Light"} mode is active`}
+            </p>
           </CardContent>
         </Card>
 
