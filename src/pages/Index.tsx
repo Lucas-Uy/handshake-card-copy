@@ -20,16 +20,6 @@ const Dashboard = () => {
   useEffect(() => {
     if (!user) return;
 
-    // Fetch accent color
-    supabase
-      .from("profiles")
-      .select("card_accent_color")
-      .eq("user_id", user.id)
-      .single()
-      .then(({ data }) => {
-        if (data?.card_accent_color) setAccentColor(data.card_accent_color);
-      });
-
     // Fetch recent logs
     supabase
       .from("interaction_logs")
