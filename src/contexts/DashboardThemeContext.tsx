@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
 export type DashboardTheme =
+  | "light" | "dark"
   | "midnight" | "slate" | "emerald" | "cyberpunk"
   | "serika" | "botanical" | "olivia" | "carbon"
   | "monokai" | "aurora" | "dracula" | "terminal";
@@ -15,6 +16,18 @@ interface ThemeConfig {
 }
 
 export const DASHBOARD_THEMES: Record<DashboardTheme, ThemeConfig> = {
+  light: {
+    label: "Light",
+    description: "Clean, bright interface",
+    preview: "#0d9488",
+    secondary: "#3b82f6",
+  },
+  dark: {
+    label: "Dark",
+    description: "Easy on the eyes",
+    preview: "#14b8a6",
+    secondary: "#6366f1",
+  },
   midnight: {
     label: "Midnight",
     description: "Deep blue-black with cool accents",
@@ -130,7 +143,11 @@ export function DashboardThemeProvider({ children }: { children: ReactNode }) {
 
   const [systemPref, setSystemPref] = useState<"dark" | "light">(getSystemPreference);
 
-  const resolvedColorMode: "dark" | "light" = colorMode === "system" ? systemPref : colorMode;
+  // Light/dark theme directly determines color mode; other themes use stored colorMode
+  const resolvedColorMode: "dark" | "light" =
+    theme === "light" ? "light" :
+    theme === "dark" ? "dark" :
+    colorMode === "system" ? systemPref : colorMode;
 
   const setTheme = (t: DashboardTheme) => {
     setThemeState(t);
