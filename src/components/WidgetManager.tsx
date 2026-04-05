@@ -29,23 +29,28 @@ interface WidgetManagerProps {
   stats: {
     totalTaps: number;
     uniqueVisitors: number;
+    contactSaveRate: number;
+    avgDwellTime: number;
     topDevice: string;
     topLocation: string;
     profileViews: number;
     cvDownloads: number;
     vcardDownloads: number;
+    leadGenCount: number;
   };
 }
 
-type WidgetKey = "totalTaps" | "uniqueVisitors" | "topDevice" | "topLocation" | "profileViews" | "cvDownloads";
+type WidgetKey = "totalTaps" | "uniqueVisitors" | "contactSaveRate" | "topDevice" | "profileViews" | "vcardDownloads" | "cvDownloads" | "leadGenCount";
 
 const WIDGET_CONFIG: { key: WidgetKey; label: string; icon: React.ReactNode }[] = [
   { key: "totalTaps", label: "Total Taps", icon: <Zap className="w-4 h-4" /> },
   { key: "uniqueVisitors", label: "Unique Visitors", icon: <Users className="w-4 h-4" /> },
+  { key: "contactSaveRate", label: "Contact Save Rate", icon: <Eye className="w-4 h-4" /> },
   { key: "topDevice", label: "Top Device", icon: <Smartphone className="w-4 h-4" /> },
-  { key: "topLocation", label: "Top Location", icon: <MapPin className="w-4 h-4" /> },
   { key: "profileViews", label: "Profile Views", icon: <Eye className="w-4 h-4" /> },
+  { key: "vcardDownloads", label: "vCard Saves", icon: <FileText className="w-4 h-4" /> },
   { key: "cvDownloads", label: "CV Downloads", icon: <FileText className="w-4 h-4" /> },
+  { key: "leadGenCount", label: "Leads Captured", icon: <Users className="w-4 h-4" /> },
 ];
 
 const DEFAULT_ORDER: WidgetKey[] = WIDGET_CONFIG.map((w) => w.key);
