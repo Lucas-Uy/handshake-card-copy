@@ -149,7 +149,7 @@ export const InteractiveCard3D = forwardRef<HTMLDivElement, InteractiveCard3DPro
     y.set(clientY - rect.top - rect.height / 2);
   };
 
-  const handleFlipToBack = () => { resetTilt(); setIsFlipped(true); };
+  const handleFlipToBack = () => { resetTilt(); setIsFlipped(true); onFlipToBack?.(); };
   const handleFlipToFront = () => { resetTilt(); setIsFlipped(false); };
   const handleToggleFlip = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
