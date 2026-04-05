@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
+import { useChartPalette } from "@/components/dashboard/ChartPaletteSelector";
 
 interface DeviceDonutChartProps {
   data: { name: string; value: number; color: string }[];
