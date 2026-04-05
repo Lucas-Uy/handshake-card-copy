@@ -62,13 +62,10 @@ interface ProfileData {
   headline: string | null;
   bio: string | null;
   avatar_url: string | null;
-  email_public: string | null;
-  phone: string | null;
   location: string | null;
   website: string | null;
   linkedin_url: string | null;
   github_url: string | null;
-  cv_url: string | null;
   card_accent_color: string | null;
   availability_status: string | null;
   work_mode: string | null;
