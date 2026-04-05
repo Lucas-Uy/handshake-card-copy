@@ -147,10 +147,12 @@ export function WidgetManager({ stats }: WidgetManagerProps) {
     switch (key) {
       case "totalTaps": return stats.totalTaps.toLocaleString();
       case "uniqueVisitors": return stats.uniqueVisitors.toLocaleString();
+      case "contactSaveRate": return `${stats.contactSaveRate}%`;
       case "topDevice": return stats.topDevice;
-      case "topLocation": return stats.topLocation;
       case "profileViews": return stats.profileViews.toLocaleString();
+      case "vcardDownloads": return stats.vcardDownloads.toLocaleString();
       case "cvDownloads": return stats.cvDownloads.toLocaleString();
+      case "leadGenCount": return stats.leadGenCount.toLocaleString();
     }
   }, [stats]);
 
