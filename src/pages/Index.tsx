@@ -79,7 +79,10 @@ const Dashboard = () => {
               Actionable intelligence from your NFC interactions
             </p>
           </div>
-          <ExportButton stats={stats} chartData={chartData} />
+          <div className="flex items-center gap-2">
+            <ChartPaletteSelector />
+            <ExportButton stats={stats} chartData={chartData} />
+          </div>
         </div>
 
         {/* KPI Widgets */}
