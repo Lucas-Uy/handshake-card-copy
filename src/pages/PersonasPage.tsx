@@ -137,9 +137,13 @@ const PersonasPage = () => {
     if (!editingPersona) return;
     setSaving(true);
     const { id, ...rest } = editingPersona;
-    // Remove fields that aren't columns
     const updateData: Record<string, unknown> = { ...rest };
     delete (updateData as Record<string, unknown>).id;
+
+    // Don't overwrite hashed pin with empty string if user didn't change it
+    if (typeof updateData.pin_code === 'string' && (updateData.pin_code === '' || (updateData.pin_code as string).startsWith('$2'))) {
+      delete updateData.pin_code;
+    }
 
     const { error } = await supabase
       .from("personas")
@@ -423,11 +427,11 @@ const PersonasPage = () => {
                         <div className="space-y-1">
                           <Label>PIN Code (4 digits)</Label>
                           <Input
-                            value={editingPersona.pin_code ?? ""}
+                            value={editingPersona.pin_code && editingPersona.pin_code.startsWith("$2") ? "" : (editingPersona.pin_code ?? "")}
                             onChange={(e) => updateField("pin_code", e.target.value.replace(/\D/g, "").slice(0, 4))}
-                            placeholder="1234"
+                            placeholder={editingPersona.pin_code ? "PIN set — enter new to change" : "1234"}
                             maxLength={4}
-                            className="w-32 font-mono"
+                            className="w-48 font-mono"
                           />
                         </div>
                       )}
