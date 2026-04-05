@@ -144,7 +144,17 @@ const PublicProfilePage = () => {
         if (activePer) setPersona(activePer as PersonaData);
       }
 
+      // Track return visitors via localStorage
+      const visitorKey = `nfc_visitor_${profileData.user_id}`;
+      const visitHistory = JSON.parse(localStorage.getItem(visitorKey) || "[]");
+      const isReturn = visitHistory.length > 0;
+      visitHistory.push(new Date().toISOString());
+      localStorage.setItem(visitorKey, JSON.stringify(visitHistory.slice(-20)));
+
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const visitorId = localStorage.getItem("nfc_visitor_id") || `visitor_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+      localStorage.setItem("nfc_visitor_id", visitorId);
+
       fetch(`https://${projectId}.supabase.co/functions/v1/log-interaction`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -155,6 +165,9 @@ const PublicProfilePage = () => {
             source: "public_landing",
             ua: navigator.userAgent,
             persona_slug: personaSlug || null,
+            visitor_id: visitorId,
+            is_return: isReturn,
+            visit_count: visitHistory.length,
           },
         }),
       }).catch(() => {});
@@ -275,6 +288,19 @@ const PublicProfilePage = () => {
     }).catch(() => {});
     window.open(merged.cv_url, "_blank");
   };
+
+  const trackCardFlip = useCallback(() => {
+    const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+    fetch(`https://${projectId}.supabase.co/functions/v1/log-interaction`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        target_user_id: merged.user_id,
+        interaction_type: "card_flip",
+        metadata: { ua: navigator.userAgent, persona_slug: persona?.slug },
+      }),
+    }).catch(() => {});
+  }, [merged.user_id, persona?.slug]);
 
   if (loading) {
     return (
@@ -397,6 +423,8 @@ const PublicProfilePage = () => {
               textAlignment={persona?.text_alignment ?? "left"}
               cardBlur={persona?.card_blur ?? 12}
               cardTexture={persona?.card_texture ?? "none"}
+              onFlipToBack={trackCardFlip}
+              onLinkClick={trackLinkClick}
             />
           </motion.div>
         </motion.div>

@@ -32,6 +32,8 @@ interface InteractiveCard3DProps {
   textAlignment?: string;
   cardBlur?: number;
   cardTexture?: string;
+  onFlipToBack?: () => void;
+  onLinkClick?: (linkType: string) => void;
 }
 
 interface CardFrontProps {
@@ -62,6 +64,7 @@ interface CardBackProps {
   isFlipped: boolean;
   linkedinUrl?: string;
   onFlipBack: () => void;
+  onLinkClick?: (linkType: string) => void;
   profileUrl: string;
   username: string;
   website?: string;
@@ -72,6 +75,7 @@ interface SocialIconProps {
   label: string;
   external?: boolean;
   children: React.ReactNode;
+  onClick?: () => void;
 }
 
 const TILT_RANGE = 12;
@@ -102,6 +106,8 @@ export const InteractiveCard3D = forwardRef<HTMLDivElement, InteractiveCard3DPro
     textAlignment = "left",
     cardBlur = 12,
     cardTexture = "none",
+    onFlipToBack,
+    onLinkClick,
   },
   forwardedRef,
 ) {
@@ -145,7 +151,7 @@ export const InteractiveCard3D = forwardRef<HTMLDivElement, InteractiveCard3DPro
     y.set(clientY - rect.top - rect.height / 2);
   };
 
-  const handleFlipToBack = () => { resetTilt(); setIsFlipped(true); };
+  const handleFlipToBack = () => { resetTilt(); setIsFlipped(true); onFlipToBack?.(); };
   const handleFlipToFront = () => { resetTilt(); setIsFlipped(false); };
   const handleToggleFlip = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
@@ -213,6 +219,7 @@ export const InteractiveCard3D = forwardRef<HTMLDivElement, InteractiveCard3DPro
               isFlipped={isFlipped}
               linkedinUrl={linkedinUrl}
               onFlipBack={handleFlipToFront}
+              onLinkClick={onLinkClick}
               profileUrl={profileUrl}
               username={username}
               website={website}
@@ -353,6 +360,7 @@ function CardBack({
   isFlipped,
   linkedinUrl,
   onFlipBack,
+  onLinkClick,
   profileUrl,
   username,
   website,
@@ -401,22 +409,22 @@ function CardBack({
 
         <div className="mt-[0.3em] flex items-center gap-[0.6em]">
           {linkedinUrl && (
-            <SocialIcon href={linkedinUrl} label="LinkedIn">
+            <SocialIcon href={linkedinUrl} label="LinkedIn" onClick={() => onLinkClick?.("linkedin")}>
               <Linkedin className="h-[0.85em] w-[0.85em]" style={{ color: textColor }} />
             </SocialIcon>
           )}
           {githubUrl && (
-            <SocialIcon href={githubUrl} label="GitHub">
+            <SocialIcon href={githubUrl} label="GitHub" onClick={() => onLinkClick?.("github")}>
               <Github className="h-[0.85em] w-[0.85em]" style={{ color: textColor }} />
             </SocialIcon>
           )}
           {website && (
-            <SocialIcon href={website} label="Website">
+            <SocialIcon href={website} label="Website" onClick={() => onLinkClick?.("website")}>
               <Globe className="h-[0.85em] w-[0.85em]" style={{ color: textColor }} />
             </SocialIcon>
           )}
           {email && (
-            <SocialIcon href={`mailto:${email}`} label="Email" external={false}>
+            <SocialIcon href={`mailto:${email}`} label="Email" external={false} onClick={() => onLinkClick?.("email")}>
               <Mail className="h-[0.85em] w-[0.85em]" style={{ color: textColor }} />
             </SocialIcon>
           )}
@@ -427,7 +435,7 @@ function CardBack({
 }
 
 const SocialIcon = forwardRef<HTMLAnchorElement, SocialIconProps>(function SocialIcon(
-  { href, label, external = true, children },
+  { href, label, external = true, children, onClick },
   ref,
 ) {
   return (
@@ -439,7 +447,7 @@ const SocialIcon = forwardRef<HTMLAnchorElement, SocialIconProps>(function Socia
       aria-label={label}
       className="flex h-[2em] w-[2em] items-center justify-center rounded-full bg-white/15 transition-colors hover:bg-white/25"
       onPointerDown={(event) => event.stopPropagation()}
-      onClick={(event) => event.stopPropagation()}
+      onClick={(event) => { event.stopPropagation(); onClick?.(); }}
     >
       {children}
     </a>

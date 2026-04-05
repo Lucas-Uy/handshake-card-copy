@@ -48,6 +48,10 @@ export interface NfcStats {
   authSuccessRate: number;
   leadGenCount: number;
   unauthorizedAttempts: number;
+  // New metrics
+  cardFlips: number;
+  returnVisitorRate: number;
+  interactionDepthRate: number;
   // Breakdowns
   deviceBreakdown: DeviceBreakdown[];
   browserBreakdown: DeviceBreakdown[];
@@ -93,6 +97,7 @@ export function useNfcData() {
     profileViews: 0, cvDownloads: 0, vcardDownloads: 0,
     topDevice: "No data", topLocation: "No data",
     authSuccessRate: 0, leadGenCount: 0, unauthorizedAttempts: 0,
+    cardFlips: 0, returnVisitorRate: 0, interactionDepthRate: 0,
     deviceBreakdown: [], browserBreakdown: [], osBreakdown: [],
     hourlyHeat: [], linkCTR: [], personaPerformance: [],
     connectionSources: { nfc: 0, qr: 0, direct: 0 },
@@ -163,10 +168,13 @@ export function useNfcData() {
     const linkClicks = new Map<string, number>();
     const personaTaps = new Map<string, number>();
     const personaVcards = new Map<string, number>();
-    let profileViews = 0, cvDownloads = 0, vcardDownloads = 0;
+    let profileViews = 0, cvDownloads = 0, vcardDownloads = 0, cardFlips = 0;
     let totalDwell = 0, dwellCount = 0;
     let securitySuccess = 0, securityTotal = 0, unauthorizedAttempts = 0;
     let nfcSource = 0, qrSource = 0, directSource = 0;
+    let returnVisitors = 0;
+    const visitorsWithFlips = new Set<string>();
+    const visitorsWithInteractions = new Set<string>();
 
     allLogs.forEach((log) => {
       const meta = (log.metadata as Record<string, any>) ?? {};
@@ -198,12 +206,15 @@ export function useNfcData() {
         if (source === "nfc_redirect") nfcSource++;
         else if (source === "qr_scan") qrSource++;
         else directSource++;
+        if (meta.is_return) returnVisitors++;
       }
-      if (log.interaction_type === "cv_download") cvDownloads++;
-      if (log.interaction_type === "vcard_download") vcardDownloads++;
+      if (log.interaction_type === "cv_download") { cvDownloads++; visitorsWithInteractions.add(log.entity_id); }
+      if (log.interaction_type === "vcard_download") { vcardDownloads++; visitorsWithInteractions.add(log.entity_id); }
+      if (log.interaction_type === "card_flip") { cardFlips++; visitorsWithFlips.add(log.entity_id); visitorsWithInteractions.add(log.entity_id); }
       if (log.interaction_type === "link_click") {
         const lt = meta.link_type || "unknown";
         linkClicks.set(lt, (linkClicks.get(lt) ?? 0) + 1);
+        visitorsWithInteractions.add(log.entity_id);
       }
       if (log.interaction_type === "dwell_time" && meta.seconds) {
         totalDwell += Number(meta.seconds);
@@ -288,6 +299,8 @@ export function useNfcData() {
     const contactSaveRate = profileViews > 0 ? Math.round((vcardDownloads / profileViews) * 100) : 0;
     const avgDwellTime = dwellCount > 0 ? Math.round(totalDwell / dwellCount) : 0;
     const authSuccessRate = securityTotal > 0 ? Math.round((securitySuccess / securityTotal) * 100) : 0;
+    const returnVisitorRate = profileViews > 0 ? Math.round((returnVisitors / profileViews) * 100) : 0;
+    const interactionDepthRate = visitors.size > 0 ? Math.round((visitorsWithInteractions.size / visitors.size) * 100) : 0;
 
     setStats({
       totalTaps: allLogs.filter((l) => l.interaction_type === "profile_view").length,
@@ -302,6 +315,9 @@ export function useNfcData() {
       authSuccessRate,
       leadGenCount: leads.length,
       unauthorizedAttempts,
+      cardFlips,
+      returnVisitorRate,
+      interactionDepthRate,
       deviceBreakdown,
       browserBreakdown,
       osBreakdown,

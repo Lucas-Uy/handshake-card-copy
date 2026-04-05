@@ -11,6 +11,7 @@ import { ConnectionSourceChart } from "@/components/dashboard/ConnectionSourceCh
 import { PersonaBarChart } from "@/components/dashboard/PersonaBarChart";
 import { ConversionFunnel } from "@/components/dashboard/ConversionFunnel";
 import { ExportButton } from "@/components/dashboard/ExportButton";
+import { LeadGenTracker } from "@/components/dashboard/LeadGenTracker";
 import { useNfcData } from "@/hooks/useNfcData";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -100,6 +101,7 @@ const Dashboard = () => {
               </div>
               <ConversionFunnel
                 profileViews={stats.profileViews}
+                cardFlips={stats.cardFlips}
                 linkClicks={totalLinkClicks}
                 vcardDownloads={stats.vcardDownloads}
               />
@@ -196,12 +198,21 @@ const Dashboard = () => {
                     <span className="font-bold">{stats.cvDownloads}</span>
                   </div>
                   <div className="flex justify-between">
+                    <span className="text-muted-foreground">Return Visitors</span>
+                    <span className="font-bold">{stats.returnVisitorRate}%</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Interaction Depth</span>
+                    <span className="font-bold">{stats.interactionDepthRate}%</span>
+                  </div>
+                  <div className="flex justify-between">
                     <span className="text-muted-foreground">Avg. Dwell Time</span>
                     <span className="font-bold">{stats.avgDwellTime > 0 ? `${stats.avgDwellTime}s` : "—"}</span>
                   </div>
                 </div>
               </div>
             </div>
+            <LeadGenTracker />
           </TabsContent>
         </Tabs>
       </div>
