@@ -137,9 +137,13 @@ const PersonasPage = () => {
     if (!editingPersona) return;
     setSaving(true);
     const { id, ...rest } = editingPersona;
-    // Remove fields that aren't columns
     const updateData: Record<string, unknown> = { ...rest };
     delete (updateData as Record<string, unknown>).id;
+
+    // Don't overwrite hashed pin with empty string if user didn't change it
+    if (typeof updateData.pin_code === 'string' && (updateData.pin_code === '' || (updateData.pin_code as string).startsWith('$2'))) {
+      delete updateData.pin_code;
+    }
 
     const { error } = await supabase
       .from("personas")
