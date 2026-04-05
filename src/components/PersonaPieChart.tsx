@@ -16,7 +16,6 @@ export function PersonaPieChart() {
     if (!user) return;
 
     const load = async () => {
-      // Get all personas for labels
       const { data: personas } = await supabase
         .from("personas")
         .select("id, label")
@@ -27,7 +26,6 @@ export function PersonaPieChart() {
         return;
       }
 
-      // Get interaction logs and count by persona slug in metadata
       const { data: logs } = await supabase
         .from("interaction_logs")
         .select("metadata")
@@ -48,7 +46,6 @@ export function PersonaPieChart() {
         .map((p) => ({ name: p.label, value: counts[p.id] || 0 }))
         .filter((d) => d.value > 0);
 
-      // If no data yet, show all personas with 0
       setData(chartData.length > 0 ? chartData : personas.map((p) => ({ name: p.label, value: 1 })));
       setLoading(false);
     };
@@ -66,9 +63,7 @@ export function PersonaPieChart() {
     );
   }
 
-  if (data.length === 0) {
-    return null;
-  }
+  if (data.length === 0) return null;
 
   return (
     <Card className="glass-card animate-fade-in">
@@ -78,16 +73,7 @@ export function PersonaPieChart() {
       <CardContent>
         <ResponsiveContainer width="100%" height={220}>
           <PieChart>
-            <Pie
-              data={data}
-              cx="50%"
-              cy="50%"
-              innerRadius={50}
-              outerRadius={80}
-              paddingAngle={3}
-              dataKey="value"
-              stroke="none"
-            >
+            <Pie data={data} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={3} dataKey="value" stroke="none">
               {data.map((_, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
@@ -98,13 +84,12 @@ export function PersonaPieChart() {
                 border: "1px solid hsl(var(--border))",
                 borderRadius: "8px",
                 fontSize: "12px",
+                color: "hsl(var(--foreground))",
               }}
+              labelStyle={{ color: "hsl(var(--foreground))" }}
+              itemStyle={{ color: "hsl(var(--foreground))" }}
             />
-            <Legend
-              iconType="circle"
-              iconSize={8}
-              wrapperStyle={{ fontSize: "11px" }}
-            />
+            <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: "11px", color: "hsl(var(--foreground))" }} />
           </PieChart>
         </ResponsiveContainer>
       </CardContent>

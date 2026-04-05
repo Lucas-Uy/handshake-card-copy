@@ -55,9 +55,12 @@ export function ConnectionSourceChart({ sources }: ConnectionSourceChartProps) {
                 border: "1px solid hsl(var(--border))",
                 borderRadius: "8px",
                 fontSize: "12px",
+                color: "hsl(var(--foreground))",
               }}
+              labelStyle={{ color: "hsl(var(--foreground))" }}
+              itemStyle={{ color: "hsl(var(--foreground))" }}
             />
-            <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: "11px" }} />
+            <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: "11px", color: "hsl(var(--foreground))" }} />
           </PieChart>
         </ResponsiveContainer>
       </CardContent>

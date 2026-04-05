@@ -34,16 +34,19 @@ export function LinkCTRChart({ data }: LinkCTRChartProps) {
       <CardContent>
         <ResponsiveContainer width="100%" height={200}>
           <BarChart data={data} layout="vertical" margin={{ left: 10, right: 20 }}>
-            <XAxis type="number" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
-            <YAxis dataKey="name" type="category" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={70} />
+            <XAxis type="number" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
+            <YAxis dataKey="name" type="category" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} width={70} />
             <Tooltip
               contentStyle={{
                 background: "hsl(var(--card))",
                 border: "1px solid hsl(var(--border))",
                 borderRadius: "8px",
                 fontSize: "12px",
+                color: "hsl(var(--foreground))",
               }}
-              formatter={(value: number, name: string, props: any) => [
+              labelStyle={{ color: "hsl(var(--foreground))" }}
+              itemStyle={{ color: "hsl(var(--foreground))" }}
+              formatter={(value: number, _: string, props: any) => [
                 `${value} clicks (${props.payload.percentage}% CTR)`,
                 "",
               ]}
