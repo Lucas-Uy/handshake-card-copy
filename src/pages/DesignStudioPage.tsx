@@ -338,24 +338,33 @@ const DesignStudioPage = () => {
 
                   <div className="space-y-2">
                     <Label>Background Preset Overlay</Label>
-                    <div className="grid grid-cols-2 gap-2">
+                    <p className="text-[10px] text-muted-foreground mb-2">Choose a decorative pattern overlay for your landing page</p>
+                    <div className="grid grid-cols-2 gap-3">
                       {BACKGROUND_PRESETS.map((preset) => (
                         <button
                           key={preset.id}
                           onClick={() => update("background_preset", preset.id)}
-                          className={`relative p-3 rounded-lg border text-xs text-center transition-colors overflow-hidden ${
+                          className={`relative rounded-xl border-2 text-xs text-center transition-all overflow-hidden ${
                             editing?.background_preset === preset.id
-                              ? "border-primary bg-primary/10 ring-1 ring-primary"
-                              : "border-border hover:border-primary/40"
+                              ? "border-primary ring-2 ring-primary/30 shadow-lg shadow-primary/10"
+                              : "border-border hover:border-primary/50 hover:shadow-md"
                           }`}
                         >
-                          {preset.css !== "none" && (
-                            <div
-                              className="absolute inset-0 opacity-60"
-                              style={{ backgroundImage: preset.css, backgroundColor: "#111" }}
-                            />
+                          <div
+                            className="h-20 w-full"
+                            style={{
+                              backgroundImage: preset.css !== "none" ? preset.css : undefined,
+                              backgroundColor: editing?.landing_bg_color ?? "#0a0a0f",
+                            }}
+                          />
+                          <div className="p-2 bg-card/80 backdrop-blur-sm">
+                            <span className="font-medium">{preset.label}</span>
+                          </div>
+                          {editing?.background_preset === preset.id && (
+                            <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                              <span className="text-[10px] text-primary-foreground">✓</span>
+                            </div>
                           )}
-                          <span className="relative">{preset.label}</span>
                         </button>
                       ))}
                     </div>
