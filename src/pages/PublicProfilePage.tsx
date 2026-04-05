@@ -159,7 +159,26 @@ const PublicProfilePage = () => {
         }),
       }).catch(() => {});
 
+      // Track dwell time on page unload
+      const startTime = Date.now();
+      const handleUnload = () => {
+        const seconds = Math.round((Date.now() - startTime) / 1000);
+        if (seconds > 2) {
+          const blob = new Blob([JSON.stringify({
+            target_user_id: profileData.user_id,
+            interaction_type: "dwell_time",
+            metadata: { seconds, ua: navigator.userAgent, persona_slug: personaSlug || null },
+          })], { type: "application/json" });
+          navigator.sendBeacon(
+            `https://${projectId}.supabase.co/functions/v1/log-interaction`,
+            blob
+          );
+        }
+      };
+      window.addEventListener("beforeunload", handleUnload);
+
       setLoading(false);
+      return () => window.removeEventListener("beforeunload", handleUnload);
     };
 
     load();
