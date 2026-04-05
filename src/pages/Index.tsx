@@ -12,6 +12,7 @@ import { PersonaBarChart } from "@/components/dashboard/PersonaBarChart";
 import { ConversionFunnel } from "@/components/dashboard/ConversionFunnel";
 import { ExportButton } from "@/components/dashboard/ExportButton";
 import { LeadGenTracker } from "@/components/dashboard/LeadGenTracker";
+import { ChartPaletteProvider, ChartPaletteSelector } from "@/components/dashboard/ChartPaletteSelector";
 import { useNfcData } from "@/hooks/useNfcData";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -69,6 +70,7 @@ const Dashboard = () => {
   }
 
   return (
+    <ChartPaletteProvider>
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
@@ -78,7 +80,10 @@ const Dashboard = () => {
               Actionable intelligence from your NFC interactions
             </p>
           </div>
-          <ExportButton stats={stats} chartData={chartData} />
+          <div className="flex items-center gap-2">
+            <ChartPaletteSelector />
+            <ExportButton stats={stats} chartData={chartData} />
+          </div>
         </div>
 
         {/* KPI Widgets */}
@@ -217,6 +222,7 @@ const Dashboard = () => {
         </Tabs>
       </div>
     </DashboardLayout>
+    </ChartPaletteProvider>
   );
 };
 

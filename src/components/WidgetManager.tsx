@@ -37,14 +37,12 @@ interface WidgetManagerProps {
   };
 }
 
-type WidgetKey = "totalTaps" | "uniqueVisitors" | "contactSaveRate" | "topDevice" | "profileViews" | "vcardDownloads" | "cvDownloads" | "leadGenCount" | "cardFlips" | "returnVisitorRate" | "interactionDepthRate";
+type WidgetKey = "profileViews" | "uniqueVisitors" | "topDevice" | "vcardDownloads" | "cvDownloads" | "leadGenCount" | "cardFlips" | "returnVisitorRate" | "interactionDepthRate";
 
 const WIDGET_CONFIG: { key: WidgetKey; label: string; icon: React.ReactNode; description: string }[] = [
-  { key: "totalTaps", label: "Total Taps", icon: <Zap className="w-4 h-4" />, description: "Total profile views from NFC taps" },
-  { key: "uniqueVisitors", label: "Unique Visitors", icon: <Users className="w-4 h-4" />, description: "Distinct visitors by session" },
-  { key: "contactSaveRate", label: "Contact Save Rate", icon: <Eye className="w-4 h-4" />, description: "% of visitors who saved your contact" },
-  { key: "topDevice", label: "Top Device", icon: <Smartphone className="w-4 h-4" />, description: "Most common device type" },
   { key: "profileViews", label: "Profile Views", icon: <Eye className="w-4 h-4" />, description: "Total landing page views" },
+  { key: "uniqueVisitors", label: "Unique Visitors", icon: <Users className="w-4 h-4" />, description: "Distinct visitors by session" },
+  { key: "topDevice", label: "Top Device", icon: <Smartphone className="w-4 h-4" />, description: "Most common device type" },
   { key: "vcardDownloads", label: "vCard Saves", icon: <FileText className="w-4 h-4" />, description: "Total contact card downloads" },
   { key: "cvDownloads", label: "CV Downloads", icon: <FileText className="w-4 h-4" />, description: "Total resume downloads" },
   { key: "leadGenCount", label: "Leads Captured", icon: <Users className="w-4 h-4" />, description: "Contacts from private mode" },
@@ -55,8 +53,8 @@ const WIDGET_CONFIG: { key: WidgetKey; label: string; icon: React.ReactNode; des
 
 const DEFAULT_ORDER: WidgetKey[] = WIDGET_CONFIG.map((w) => w.key);
 const DEFAULT_VISIBILITY: Record<WidgetKey, boolean> = {
-  totalTaps: true, uniqueVisitors: true, contactSaveRate: true,
-  topDevice: true, profileViews: true, vcardDownloads: true, cvDownloads: true, leadGenCount: true,
+  profileViews: true, uniqueVisitors: true,
+  topDevice: true, vcardDownloads: true, cvDownloads: true, leadGenCount: true,
   cardFlips: true, returnVisitorRate: true, interactionDepthRate: true,
 };
 
@@ -126,9 +124,7 @@ export function WidgetManager({ stats }: WidgetManagerProps) {
 
   const getValue = useCallback((key: WidgetKey): string => {
     switch (key) {
-      case "totalTaps": return stats.totalTaps.toLocaleString();
       case "uniqueVisitors": return stats.uniqueVisitors.toLocaleString();
-      case "contactSaveRate": return `${stats.contactSaveRate}%`;
       case "topDevice": return stats.topDevice;
       case "profileViews": return stats.profileViews.toLocaleString();
       case "vcardDownloads": return stats.vcardDownloads.toLocaleString();

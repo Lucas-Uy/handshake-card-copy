@@ -1,12 +1,14 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { Users } from "lucide-react";
+import { useChartPalette } from "@/components/dashboard/ChartPaletteSelector";
 
 interface PersonaBarChartProps {
   data: { name: string; taps: number; saveRate: number }[];
 }
 
 export function PersonaBarChart({ data }: PersonaBarChartProps) {
+  const { colors } = useChartPalette();
   if (data.length === 0) {
     return (
       <Card className="glass-card animate-fade-in">
@@ -47,8 +49,8 @@ export function PersonaBarChart({ data }: PersonaBarChartProps) {
               itemStyle={{ color: "hsl(var(--foreground))" }}
             />
             <Legend wrapperStyle={{ fontSize: "11px", color: "hsl(var(--foreground))" }} />
-            <Bar yAxisId="left" dataKey="taps" name="Taps" fill="#0d9488" radius={[4, 4, 0, 0]} barSize={24} />
-            <Bar yAxisId="right" dataKey="saveRate" name="Save Rate %" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={24} />
+            <Bar yAxisId="left" dataKey="taps" name="Taps" fill={colors[0]} radius={[4, 4, 0, 0]} barSize={24} />
+            <Bar yAxisId="right" dataKey="saveRate" name="Save Rate %" fill={colors[1]} radius={[4, 4, 0, 0]} barSize={24} />
           </BarChart>
         </ResponsiveContainer>
       </CardContent>

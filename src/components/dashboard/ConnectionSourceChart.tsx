@@ -1,20 +1,19 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 import { Wifi } from "lucide-react";
+import { useChartPalette } from "@/components/dashboard/ChartPaletteSelector";
 
 interface ConnectionSourceChartProps {
   sources: { nfc: number; qr: number; direct: number };
 }
 
-const SOURCE_DATA = [
-  { key: "nfc", label: "NFC Tap", color: "#0d9488" },
-  { key: "qr", label: "QR Scan", color: "#3b82f6" },
-  { key: "direct", label: "Direct Link", color: "#8b5cf6" },
-] as const;
+const SOURCE_KEYS = ["nfc", "qr", "direct"] as const;
+const SOURCE_LABELS: Record<string, string> = { nfc: "NFC Tap", qr: "QR Scan", direct: "Direct Link" };
 
 export function ConnectionSourceChart({ sources }: ConnectionSourceChartProps) {
-  const data = SOURCE_DATA
-    .map((s) => ({ name: s.label, value: sources[s.key], color: s.color }))
+  const { colors } = useChartPalette();
+  const data = SOURCE_KEYS
+    .map((key, i) => ({ name: SOURCE_LABELS[key], value: sources[key], color: colors[i % colors.length] }))
     .filter((d) => d.value > 0);
 
   const total = data.reduce((s, d) => s + d.value, 0);

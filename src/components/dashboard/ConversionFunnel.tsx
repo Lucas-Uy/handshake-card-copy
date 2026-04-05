@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Filter } from "lucide-react";
+import { useChartPalette } from "@/components/dashboard/ChartPaletteSelector";
 
 interface ConversionFunnelProps {
   profileViews: number;
@@ -9,11 +10,12 @@ interface ConversionFunnelProps {
 }
 
 export function ConversionFunnel({ profileViews, cardFlips, linkClicks, vcardDownloads }: ConversionFunnelProps) {
+  const { colors } = useChartPalette();
   const steps = [
-    { label: "Profile Views", value: profileViews, color: "hsl(var(--primary))" },
-    { label: "Card Flips", value: cardFlips, color: "hsl(180, 60%, 50%)" },
-    { label: "Link Clicks", value: linkClicks, color: "hsl(200, 70%, 50%)" },
-    { label: "Contact Saves", value: vcardDownloads, color: "hsl(262, 60%, 55%)" },
+    { label: "Profile Views", value: profileViews, color: colors[0] },
+    { label: "Card Flips", value: cardFlips, color: colors[1] },
+    { label: "Link Clicks", value: linkClicks, color: colors[2] ?? colors[0] },
+    { label: "Contact Saves", value: vcardDownloads, color: colors[3] ?? colors[1] },
   ];
 
   const maxVal = Math.max(...steps.map((s) => s.value), 1);

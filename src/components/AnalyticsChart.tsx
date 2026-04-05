@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Activity } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useChartPalette } from "@/components/dashboard/ChartPaletteSelector";
 import type { Timeframe } from "@/hooks/useNfcData";
 
 interface AnalyticsChartProps {
@@ -18,6 +19,7 @@ const TIMEFRAMES: { label: string; value: Timeframe }[] = [
 ];
 
 export function AnalyticsChart({ data, timeframe, onTimeframeChange }: AnalyticsChartProps) {
+  const { colors } = useChartPalette();
   return (
     <Card className="glass-card animate-fade-in">
       <CardHeader className="pb-2">
@@ -46,12 +48,12 @@ export function AnalyticsChart({ data, timeframe, onTimeframeChange }: Analytics
             <AreaChart data={data} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
               <defs>
                 <linearGradient id="tapGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(174, 72%, 40%)" stopOpacity={0.4} />
-                  <stop offset="95%" stopColor="hsl(174, 72%, 40%)" stopOpacity={0} />
+                  <stop offset="5%" stopColor={colors[0]} stopOpacity={0.4} />
+                  <stop offset="95%" stopColor={colors[0]} stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="vcardGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(221, 83%, 53%)" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="hsl(221, 83%, 53%)" stopOpacity={0} />
+                  <stop offset="5%" stopColor={colors[1]} stopOpacity={0.3} />
+                  <stop offset="95%" stopColor={colors[1]} stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.5} />
@@ -69,8 +71,8 @@ export function AnalyticsChart({ data, timeframe, onTimeframeChange }: Analytics
                 itemStyle={{ color: "hsl(var(--foreground))" }}
               />
               <Legend wrapperStyle={{ fontSize: "11px", color: "hsl(var(--foreground))" }} />
-              <Area type="monotone" dataKey="taps" name="Profile Views" stroke="hsl(174, 72%, 40%)" strokeWidth={2} fill="url(#tapGrad)" />
-              <Area type="monotone" dataKey="vcards" name="vCard Saves" stroke="hsl(221, 83%, 53%)" strokeWidth={2} fill="url(#vcardGrad)" />
+              <Area type="monotone" dataKey="taps" name="Profile Views" stroke={colors[0]} strokeWidth={2} fill="url(#tapGrad)" />
+              <Area type="monotone" dataKey="vcards" name="vCard Saves" stroke={colors[1]} strokeWidth={2} fill="url(#vcardGrad)" />
             </AreaChart>
           </ResponsiveContainer>
         </div>

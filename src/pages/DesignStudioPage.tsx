@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
+import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -21,7 +22,7 @@ import type { PersonaDesign } from "@/components/DesignStudio/types";
 import {
   Loader2, Monitor, Smartphone, Palette, Save, Eye,
   CreditCard, Layout, Type,
-  AlignLeft, AlignCenter, AlignRight,
+  AlignLeft, AlignCenter, AlignRight, FileText, Upload,
 } from "lucide-react";
 
 const TEXT_ALIGNMENTS = [
@@ -231,34 +232,42 @@ const DesignStudioPage = () => {
                 </CardContent>
               </Card>
 
-              {/* Card Texture Presets */}
+              {/* Card Texture Presets — Enhanced */}
               <Card className="glass-card">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-display">Card Texture</CardTitle>
+                  <CardTitle className="text-sm font-display flex items-center gap-2">
+                    <Palette className="w-4 h-4" /> Card Texture
+                  </CardTitle>
+                  <p className="text-[10px] text-muted-foreground">Apply a subtle surface pattern to your card</p>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-3">
                     {CARD_TEXTURE_PRESETS.map((preset) => (
                       <button
                         key={preset.id}
                         onClick={() => update("card_texture", preset.id)}
-                        className={`relative p-3 rounded-lg border text-xs text-center transition-colors overflow-hidden ${
+                        className={`relative rounded-xl border-2 text-xs text-center transition-all overflow-hidden ${
                           editing?.card_texture === preset.id
-                            ? "border-primary bg-primary/10 ring-1 ring-primary"
-                            : "border-border hover:border-primary/40"
+                            ? "border-primary ring-2 ring-primary/30 shadow-lg shadow-primary/10"
+                            : "border-border hover:border-primary/50 hover:shadow-md"
                         }`}
                       >
-                        {preset.css !== "none" && (
-                          <div
-                            className="absolute inset-0 opacity-80"
-                            style={{
-                              backgroundImage: preset.css,
-                              backgroundSize: "backgroundSize" in preset ? preset.backgroundSize : undefined,
-                              backgroundColor: "#222",
-                            }}
-                          />
+                        <div
+                          className="h-20 w-full"
+                          style={{
+                            backgroundImage: preset.css !== "none" ? preset.css : undefined,
+                            backgroundSize: "backgroundSize" in preset ? preset.backgroundSize : undefined,
+                            backgroundColor: "#1a1a2e",
+                          }}
+                        />
+                        <div className="p-2 bg-card/80 backdrop-blur-sm">
+                          <span className="font-medium">{preset.label}</span>
+                        </div>
+                        {editing?.card_texture === preset.id && (
+                          <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                            <span className="text-[10px] text-primary-foreground">✓</span>
+                          </div>
                         )}
-                        <span className="relative">{preset.label}</span>
                       </button>
                     ))}
                   </div>
@@ -330,24 +339,33 @@ const DesignStudioPage = () => {
 
                   <div className="space-y-2">
                     <Label>Background Preset Overlay</Label>
-                    <div className="grid grid-cols-2 gap-2">
+                    <p className="text-[10px] text-muted-foreground mb-2">Choose a decorative pattern overlay for your landing page</p>
+                    <div className="grid grid-cols-2 gap-3">
                       {BACKGROUND_PRESETS.map((preset) => (
                         <button
                           key={preset.id}
                           onClick={() => update("background_preset", preset.id)}
-                          className={`relative p-3 rounded-lg border text-xs text-center transition-colors overflow-hidden ${
+                          className={`relative rounded-xl border-2 text-xs text-center transition-all overflow-hidden ${
                             editing?.background_preset === preset.id
-                              ? "border-primary bg-primary/10 ring-1 ring-primary"
-                              : "border-border hover:border-primary/40"
+                              ? "border-primary ring-2 ring-primary/30 shadow-lg shadow-primary/10"
+                              : "border-border hover:border-primary/50 hover:shadow-md"
                           }`}
                         >
-                          {preset.css !== "none" && (
-                            <div
-                              className="absolute inset-0 opacity-60"
-                              style={{ backgroundImage: preset.css, backgroundColor: "#111" }}
-                            />
+                          <div
+                            className="h-20 w-full"
+                            style={{
+                              backgroundImage: preset.css !== "none" ? preset.css : undefined,
+                              backgroundColor: editing?.landing_bg_color ?? "#0a0a0f",
+                            }}
+                          />
+                          <div className="p-2 bg-card/80 backdrop-blur-sm">
+                            <span className="font-medium">{preset.label}</span>
+                          </div>
+                          {editing?.background_preset === preset.id && (
+                            <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                              <span className="text-[10px] text-primary-foreground">✓</span>
+                            </div>
                           )}
-                          <span className="relative">{preset.label}</span>
                         </button>
                       ))}
                     </div>
@@ -411,6 +429,36 @@ const DesignStudioPage = () => {
                     <Label>GitHub</Label>
                     <Input value={editing?.github_url ?? ""} onChange={(e) => update("github_url", e.target.value)} />
                   </div>
+                </CardContent>
+              </Card>
+
+              {/* CV / Resume Upload */}
+              <Card className="glass-card">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-display flex items-center gap-2">
+                    <FileText className="w-4 h-4" /> CV / Resume
+                  </CardTitle>
+                  <p className="text-[10px] text-muted-foreground">Optional — appears as a download button on your landing page</p>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {editing?.cv_url ? (
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" className="text-xs truncate max-w-[200px]">
+                        {editing.cv_url.split("/").pop()}
+                      </Badge>
+                      <Button size="sm" variant="ghost" className="text-xs h-7 text-destructive" onClick={() => update("cv_url", null)}>
+                        Remove
+                      </Button>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">No CV uploaded yet</p>
+                  )}
+                  <ImageUploadField
+                    label="Upload CV (PDF or image)"
+                    value={editing?.cv_url ?? null}
+                    onChange={(url) => update("cv_url", url)}
+                    folder="cv-uploads"
+                  />
                 </CardContent>
               </Card>
             </TabsContent>

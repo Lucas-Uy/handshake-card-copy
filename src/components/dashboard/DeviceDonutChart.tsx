@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
+import { useChartPalette } from "@/components/dashboard/ChartPaletteSelector";
 
 interface DeviceDonutChartProps {
   data: { name: string; value: number; color: string }[];
@@ -7,6 +8,8 @@ interface DeviceDonutChartProps {
 }
 
 export function DeviceDonutChart({ data, title }: DeviceDonutChartProps) {
+  const { colors: paletteColors } = useChartPalette();
+  const coloredData = data.map((d, i) => ({ ...d, color: paletteColors[i % paletteColors.length] }));
   const total = data.reduce((s, d) => s + d.value, 0);
 
   if (data.length === 0 || total === 0) {
@@ -30,8 +33,8 @@ export function DeviceDonutChart({ data, title }: DeviceDonutChartProps) {
       <CardContent>
         <ResponsiveContainer width="100%" height={200}>
           <PieChart>
-            <Pie data={data} cx="50%" cy="50%" innerRadius={45} outerRadius={75} paddingAngle={3} dataKey="value" stroke="none">
-              {data.map((entry, i) => (
+            <Pie data={coloredData} cx="50%" cy="50%" innerRadius={45} outerRadius={75} paddingAngle={3} dataKey="value" stroke="none">
+              {coloredData.map((entry, i) => (
                 <Cell key={i} fill={entry.color} />
               ))}
             </Pie>
