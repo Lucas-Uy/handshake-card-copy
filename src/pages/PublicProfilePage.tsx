@@ -34,8 +34,13 @@ interface PersonaData {
   github_url: string | null;
   cv_url: string | null;
   accent_color: string | null;
+  secondary_color: string | null;
+  tertiary_color: string | null;
+  text_color: string | null;
+  landing_bg_color: string | null;
   background_preset: string | null;
   background_image_url: string | null;
+  card_bg_image_url: string | null;
   glass_opacity: number | null;
   availability_status: string | null;
   work_mode: string | null;
