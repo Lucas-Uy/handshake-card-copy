@@ -318,8 +318,12 @@ const DesignStudioPage = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label>Font Family</Label>
-                    <Select value={editing?.font_family ?? "Space Grotesk"} onValueChange={(v) => update("font_family", v)}>
+                    <Label>Font Family {!isPro && <UpgradePrompt feature="Custom Fonts" compact />}</Label>
+                    <Select
+                      value={editing?.font_family ?? "Space Grotesk"}
+                      onValueChange={(v) => update("font_family", v)}
+                      disabled={!isPro}
+                    >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
