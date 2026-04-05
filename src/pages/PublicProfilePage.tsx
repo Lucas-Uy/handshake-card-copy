@@ -481,6 +481,7 @@ const PublicProfilePage = () => {
         </div>
       </section>
     </div>
+    </>
   );
 };
 
