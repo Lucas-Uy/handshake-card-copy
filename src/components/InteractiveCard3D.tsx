@@ -198,6 +198,10 @@ export const InteractiveCard3D = forwardRef<HTMLDivElement, InteractiveCard3DPro
               isFlipped={isFlipped}
               name={name}
               onFlip={handleFlipToBack}
+              fontFamily={fontFamily}
+              textAlignment={textAlignment}
+              cardBlur={cardBlur}
+              cardTexture={cardTexture}
             />
             <CardBack
               accentColor={accentColor}
