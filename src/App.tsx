@@ -16,6 +16,7 @@ import ProfilePage from "./pages/ProfilePage.tsx";
 import PersonasPage from "./pages/PersonasPage.tsx";
 import LeadsPage from "./pages/LeadsPage.tsx";
 import DesignStudioPage from "./pages/DesignStudioPage.tsx";
+import SettingsPage from "./pages/SettingsPage.tsx";
 import PublicProfilePage from "./pages/PublicProfilePage.tsx";
 import LoginPage from "./pages/LoginPage.tsx";
 import SignupPage from "./pages/SignupPage.tsx";
