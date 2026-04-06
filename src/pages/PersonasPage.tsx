@@ -164,13 +164,9 @@ const PersonasPage = () => {
       require_contact_exchange: editingPersona.require_contact_exchange,
     };
 
-    // Only send pin_code if user entered a new raw PIN (not empty, not a hash)
-    if (
-      editingPersona.pin_code &&
-      editingPersona.pin_code.length > 0 &&
-      !editingPersona.pin_code.startsWith("$2")
-    ) {
-      updateData.pin_code = editingPersona.pin_code;
+    // Only send pin_code if user entered a new raw PIN
+    if (newPinInput.length > 0) {
+      updateData.pin_code = newPinInput;
     }
 
     // If private mode is off, clear security fields
