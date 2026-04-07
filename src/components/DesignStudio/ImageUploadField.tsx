@@ -101,8 +101,7 @@ export function ImageUploadField({ label, value, onChange, folder, showFitContro
   };
 
   const updateFit = (updates: Partial<ImageFit>) => {
-    if (!onFitChange || !imageFit) return;
-    onFitChange({ ...imageFit, ...updates });
+    handleFitChange({ ...effectiveFit, ...updates });
   };
 
   const handlePosChange = (axis: "x" | "y", val: number) => {
