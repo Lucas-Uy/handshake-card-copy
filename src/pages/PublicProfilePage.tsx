@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { InteractiveCard3D } from "@/components/InteractiveCard3D";
 import { SecurityGate } from "@/components/SecurityGate";
 import { CardDisabledPage } from "@/components/CardDisabledPage";
+import { PublicProductGrid } from "@/components/commerce/PublicProductGrid";
 import { downloadVCard } from "@/lib/vcard";
 import { getPresetCss } from "@/components/DesignStudio/BackgroundPresets";
 import { getFontStack, getGoogleFontUrl } from "@/components/DesignStudio/FontPresets";
@@ -53,6 +54,7 @@ interface PersonaData {
   show_availability: boolean | null;
   show_location: boolean | null;
   user_id: string;
+  gcash_qr_url?: string | null;
 }
 
 interface ProfileData {
@@ -73,10 +75,17 @@ interface ProfileData {
   show_location: boolean | null;
 }
 
+interface SectionData {
+  section_type: string;
+  sort_order: number;
+  is_visible: boolean;
+}
+
 const PublicProfilePage = () => {
   const { username, personaSlug } = useParams<{ username: string; personaSlug?: string }>();
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [persona, setPersona] = useState<PersonaData | null>(null);
+  const [sections, setSections] = useState<SectionData[]>([]);
   const [ownerIsPro, setOwnerIsPro] = useState(false);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -88,7 +97,6 @@ const PublicProfilePage = () => {
   const cardOpacity = useTransform(scrollYProgress, [0.2, 0.4], [1, 0.6]);
   const chevronOpacity = useTransform(scrollYProgress, [0, 0.1], [1, 0]);
 
-  // Strip dashboard theme classes so the public page renders with its own palette
   useEffect(() => {
     const root = document.documentElement;
     const themeClasses = Array.from(root.classList).filter((c) => c.startsWith("theme-"));
@@ -108,13 +116,11 @@ const PublicProfilePage = () => {
     if (!username) return;
 
     const load = async () => {
-      // Use secure RPC to fetch only safe public fields
       const { data: profileRows, error: profileErr } = await (supabase.rpc as any)("get_public_profile", {
         p_username: username,
       });
 
       const profileData = Array.isArray(profileRows) ? profileRows[0] : profileRows;
-
       if (profileErr || !profileData) {
         setNotFound(true);
         setLoading(false);
@@ -123,7 +129,6 @@ const PublicProfilePage = () => {
 
       setProfile(profileData as ProfileData);
 
-      // Check if profile owner is Pro
       const { data: subData } = await supabase
         .from("user_subscriptions")
         .select("plan")
@@ -131,16 +136,45 @@ const PublicProfilePage = () => {
         .single();
       setOwnerIsPro(subData?.plan === "pro");
 
-      // Use secure RPC to fetch persona (excludes pin_code, returns has_pin)
       const { data: personaRows } = await (supabase.rpc as any)("get_public_persona", {
         p_user_id: profileData.user_id,
         p_slug: personaSlug || null,
       });
 
       const personaData = Array.isArray(personaRows) ? personaRows[0] : personaRows;
-      if (personaData) setPersona(personaData as PersonaData);
+      if (personaData) {
+        setPersona(personaData as PersonaData);
+        // Also fetch gcash_qr_url directly (not in RPC)
+        const { data: gcashData } = await supabase
+          .from("personas")
+          .select("gcash_qr_url")
+          .eq("id", personaData.id)
+          .single();
+        if (gcashData) {
+          setPersona(prev => prev ? { ...prev, gcash_qr_url: (gcashData as any).gcash_qr_url } : prev);
+        }
 
-      // Track return visitors via localStorage
+        // Load sections
+        const { data: sectionData } = await supabase
+          .from("persona_sections")
+          .select("section_type, sort_order, is_visible")
+          .eq("persona_id", personaData.id)
+          .order("sort_order");
+        if (sectionData && sectionData.length > 0) {
+          setSections(sectionData as SectionData[]);
+        } else {
+          // Default order
+          setSections([
+            { section_type: "hero", sort_order: 0, is_visible: true },
+            { section_type: "nfc_card", sort_order: 1, is_visible: true },
+            { section_type: "products", sort_order: 2, is_visible: true },
+            { section_type: "contact", sort_order: 3, is_visible: true },
+            { section_type: "social_grid", sort_order: 4, is_visible: true },
+          ]);
+        }
+      }
+
+      // Track visit
       const visitorKey = `nfc_visitor_${profileData.user_id}`;
       const visitHistory = JSON.parse(localStorage.getItem(visitorKey) || "[]");
       const isReturn = visitHistory.length > 0;
@@ -151,12 +185,9 @@ const PublicProfilePage = () => {
       const visitorId = localStorage.getItem("nfc_visitor_id") || `visitor_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
       localStorage.setItem("nfc_visitor_id", visitorId);
 
-      // Detect connection type
       const nav = navigator as any;
       const conn = nav.connection || nav.mozConnection || nav.webkitConnection;
       const connectionType = conn?.effectiveType || conn?.type || "unknown";
-
-      // Detect Brave browser
       const isBrave = (nav.brave && typeof nav.brave.isBrave === "function") ? true : false;
 
       fetch(`https://${projectId}.supabase.co/functions/v1/log-interaction`, {
@@ -177,7 +208,6 @@ const PublicProfilePage = () => {
         }),
       }).catch(() => {});
 
-      // Track dwell time on page unload
       const startTime = Date.now();
       const handleUnload = () => {
         const seconds = Math.round((Date.now() - startTime) / 1000);
@@ -348,212 +378,282 @@ const PublicProfilePage = () => {
   }
 
   const accentColor = merged.accent_color;
+  const textColor = persona?.text_color ?? "#ffffff";
   const landingBgColor = persona?.landing_bg_color || "#0a0a0f";
   const bgPresetCss = getPresetCss(persona?.background_preset);
   const bgImageUrl = persona?.background_image_url;
   const fontStack = getFontStack(persona?.font_family);
   const googleFontUrl = getGoogleFontUrl(persona?.font_family);
 
+  const visibleSections = sections.filter(s => s.is_visible).sort((a, b) => a.sort_order - b.sort_order);
+
+  // Section renderers
+  const renderHero = () => (
+    <motion.div
+      className="text-center space-y-2"
+      initial={{ opacity: 0, y: 40 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-60px" }}
+      transition={{ duration: 0.5 }}
+    >
+      {merged.avatar_url && (
+        <img
+          src={merged.avatar_url}
+          alt={merged.display_name ?? "Avatar"}
+          className="w-20 h-20 rounded-full mx-auto border-2 border-white/20 object-cover"
+          loading="lazy"
+        />
+      )}
+      <h1 className="text-2xl font-display font-bold" style={{ color: textColor }}>{merged.display_name}</h1>
+      {merged.headline && <p style={{ color: `${textColor}99` }}>{merged.headline}</p>}
+      <div className="flex items-center justify-center gap-2 flex-wrap">
+        {merged.show_availability && (
+          <Badge className="border-0 text-xs" style={{ backgroundColor: accentColor, color: "#fff" }}>
+            {merged.availability_status ?? "Available"}
+          </Badge>
+        )}
+        {merged.work_mode && (
+          <Badge variant="secondary" className="bg-white/10 text-white/80 border-0 text-xs">
+            {merged.work_mode}
+          </Badge>
+        )}
+      </div>
+      {merged.bio && (
+        <div className="mt-4 p-4 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10">
+          <p className="text-sm leading-relaxed" style={{ color: `${textColor}dd` }}>{merged.bio}</p>
+        </div>
+      )}
+    </motion.div>
+  );
+
+  const renderNfcCard = () => (
+    <section
+      className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden"
+      style={{
+        backgroundImage: bgImageUrl
+          ? `url(${bgImageUrl})`
+          : bgPresetCss !== "none"
+          ? bgPresetCss
+          : undefined,
+        backgroundSize: bgImageUrl ? "cover" : undefined,
+        backgroundPosition: bgImageUrl ? "center" : undefined,
+      }}
+    >
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{ background: `radial-gradient(ellipse 60% 50% at 50% 50%, ${accentColor}15, transparent 70%)` }}
+      />
+
+      <motion.div
+        className="absolute top-6 flex items-center gap-2"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3, duration: 0.5 }}
+      >
+        <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: accentColor }}>
+          <Wifi className="w-3 h-3 text-white" />
+        </div>
+        <span className="text-xs font-display font-semibold tracking-widest uppercase" style={{ color: `${textColor}99` }}>
+          NFC Hub
+        </span>
+        {persona && <Badge variant="secondary" className="text-[10px] ml-1 bg-white/10 text-white/70 border-0">{persona.label}</Badge>}
+      </motion.div>
+
+      <motion.div
+        className="w-full max-w-lg px-4"
+        initial={{ opacity: 0, y: 200 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ type: "spring", stiffness: 80, damping: 22, mass: 1.2, delay: 0.1 }}
+        style={{ scale: cardScale, opacity: cardOpacity }}
+      >
+        <motion.div
+          animate={{ y: [0, -10, 0] }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <InteractiveCard3D
+            name={merged.display_name ?? username ?? ""}
+            headline={merged.headline ?? undefined}
+            avatarUrl={merged.avatar_url ?? undefined}
+            username={username ?? ""}
+            accentColor={accentColor}
+            secondaryColor={persona?.secondary_color ?? undefined}
+            tertiaryColor={persona?.tertiary_color ?? undefined}
+            textColor={textColor}
+            cardBgImageUrl={persona?.card_bg_image_url ?? undefined}
+            cardBgSize={(persona as any)?.card_bg_size ?? "cover"}
+            glassOpacity={persona?.glass_opacity ?? 0.15}
+            linkedinUrl={merged.linkedin_url ?? undefined}
+            githubUrl={merged.github_url ?? undefined}
+            website={merged.website ?? undefined}
+            email={merged.email_public ?? undefined}
+            fontFamily={persona?.font_family ?? "Space Grotesk"}
+            textAlignment={persona?.text_alignment ?? "left"}
+            cardBlur={persona?.card_blur ?? 12}
+            cardTexture={persona?.card_texture ?? "none"}
+            onFlipToBack={trackCardFlip}
+            onLinkClick={trackLinkClick}
+          />
+        </motion.div>
+      </motion.div>
+
+      <motion.div
+        className="absolute bottom-8 flex flex-col items-center gap-1"
+        style={{ opacity: chevronOpacity, color: `${textColor}66` }}
+      >
+        <span className="text-[10px] font-medium uppercase tracking-widest">Scroll</span>
+        <motion.div
+          animate={{ y: [0, 6, 0] }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <ChevronDown className="w-5 h-5" />
+        </motion.div>
+      </motion.div>
+    </section>
+  );
+
+  const renderProducts = () => {
+    if (!persona || !ownerIsPro) return null;
+    return (
+      <PublicProductGrid
+        personaId={persona.id}
+        sellerUserId={merged.user_id}
+        accentColor={accentColor}
+        textColor={textColor}
+        gcashQrUrl={persona.gcash_qr_url}
+      />
+    );
+  };
+
+  const renderContact = () => (
+    <motion.div
+      className="space-y-4"
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-40px" }}
+      transition={{ duration: 0.4, delay: 0.15 }}
+    >
+      {/* Contact links */}
+      <div className="rounded-2xl divide-y divide-white/10 overflow-hidden bg-white/5 backdrop-blur-md border border-white/10">
+        {merged.show_location && merged.location && (
+          <ContactRow icon={<MapPin className="w-4 h-4" />} label={merged.location} textColor={textColor} />
+        )}
+        {merged.email_public && (
+          <ContactRow icon={<Mail className="w-4 h-4" />} label={merged.email_public} href={`mailto:${merged.email_public}`} textColor={textColor} onClick={() => trackLinkClick("email")} />
+        )}
+        {merged.phone && (
+          <ContactRow icon={<Phone className="w-4 h-4" />} label={merged.phone} href={`tel:${merged.phone}`} textColor={textColor} onClick={() => trackLinkClick("phone")} />
+        )}
+        {merged.website && (
+          <ContactRow icon={<Globe className="w-4 h-4" />} label={merged.website} href={merged.website} external textColor={textColor} onClick={() => trackLinkClick("website")} />
+        )}
+      </div>
+
+      {/* Actions */}
+      <div className="space-y-3">
+        <Button
+          onClick={handleDownloadVCard}
+          className="w-full h-12 rounded-2xl text-sm font-semibold"
+          style={{ backgroundColor: accentColor, color: "#fff" }}
+        >
+          <UserPlus className="w-4 h-4 mr-2" /> Save Contact
+        </Button>
+        {merged.cv_url && (
+          <Button onClick={handleDownloadCV} variant="outline" className="w-full h-12 rounded-2xl border-white/20 text-sm" style={{ color: textColor }}>
+            <FileText className="w-4 h-4 mr-2" /> Download CV / Resume
+          </Button>
+        )}
+      </div>
+    </motion.div>
+  );
+
+  const renderSocialGrid = () => {
+    const socials = [
+      merged.linkedin_url && { icon: Linkedin, href: merged.linkedin_url, label: "LinkedIn", type: "linkedin" },
+      merged.github_url && { icon: Github, href: merged.github_url, label: "GitHub", type: "github" },
+      merged.website && { icon: Globe, href: merged.website, label: "Website", type: "website" },
+    ].filter(Boolean) as { icon: any; href: string; label: string; type: string }[];
+
+    if (socials.length === 0) return null;
+
+    return (
+      <motion.div
+        className="space-y-2"
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.4 }}
+      >
+        <h3 className="text-xs font-semibold uppercase tracking-widest" style={{ color: `${textColor}66` }}>Connect</h3>
+        <div className="grid grid-cols-3 gap-3">
+          {socials.map((s) => (
+            <a
+              key={s.type}
+              href={s.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => trackLinkClick(s.type)}
+              className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 transition-colors"
+            >
+              <s.icon className="w-5 h-5" style={{ color: accentColor }} />
+              <span className="text-[10px] font-medium" style={{ color: `${textColor}99` }}>{s.label}</span>
+            </a>
+          ))}
+        </div>
+      </motion.div>
+    );
+  };
+
+  const sectionRenderers: Record<string, () => React.ReactNode> = {
+    hero: renderHero,
+    nfc_card: renderNfcCard,
+    products: renderProducts,
+    contact: renderContact,
+    social_grid: renderSocialGrid,
+  };
+
+  // Find the NFC card section index for full-bleed rendering
+  const nfcCardIdx = visibleSections.findIndex(s => s.section_type === "nfc_card");
+
   return (
     <>
       {googleFontUrl && <link rel="stylesheet" href={googleFontUrl} />}
       <div ref={containerRef} className="relative" style={{ backgroundColor: landingBgColor, fontFamily: fontStack }}>
-      {/* ── Hero Section: Full-screen 3D Card ── */}
-      <section
-        className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden"
-        style={{
-          backgroundImage: bgImageUrl
-            ? `url(${bgImageUrl})`
-            : bgPresetCss !== "none"
-            ? bgPresetCss
-            : undefined,
-          backgroundSize: bgImageUrl ? "cover" : undefined,
-          backgroundPosition: bgImageUrl ? "center" : undefined,
-        }}
-      >
-        {/* Ambient glow */}
-        <div
-          className="pointer-events-none absolute inset-0"
-          style={{
-            background: `radial-gradient(ellipse 60% 50% at 50% 50%, ${accentColor}15, transparent 70%)`,
-          }}
-        />
+        {visibleSections.map((section, idx) => {
+          const renderer = sectionRenderers[section.section_type];
+          if (!renderer) return null;
 
-        {/* Header badge */}
-        <motion.div
-          className="absolute top-6 flex items-center gap-2"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
-        >
-          <div className="w-6 h-6 rounded-md flex items-center justify-center" style={{ background: accentColor }}>
-            <Wifi className="w-3 h-3 text-white" />
-          </div>
-          <span className="text-xs font-display font-semibold tracking-widest uppercase" style={{ color: `${persona?.text_color ?? "#ffffff"}99` }}>
-            NFC Hub
-          </span>
-          {persona && (
-            <Badge variant="secondary" className="text-[10px] ml-1">{persona.label}</Badge>
-          )}
-        </motion.div>
+          // NFC Card gets full-screen treatment
+          if (section.section_type === "nfc_card") {
+            return <div key={section.section_type}>{renderer()}</div>;
+          }
 
-        {/* 3D Card — flies up from below, then floats */}
-        <motion.div
-          className="w-full max-w-lg px-4"
-          initial={{ opacity: 0, y: 200 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ type: "spring", stiffness: 80, damping: 22, mass: 1.2, delay: 0.1 }}
-          style={{ scale: cardScale, opacity: cardOpacity }}
-        >
-          <motion.div
-            animate={{ y: [0, -10, 0] }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-          >
-            <InteractiveCard3D
-              name={merged.display_name ?? username ?? ""}
-              headline={merged.headline ?? undefined}
-              avatarUrl={merged.avatar_url ?? undefined}
-              username={username ?? ""}
-              accentColor={accentColor}
-              secondaryColor={persona?.secondary_color ?? undefined}
-              tertiaryColor={persona?.tertiary_color ?? undefined}
-              textColor={persona?.text_color ?? "#ffffff"}
-              cardBgImageUrl={persona?.card_bg_image_url ?? undefined}
-              cardBgSize={(persona as any)?.card_bg_size ?? "cover"}
-              glassOpacity={persona?.glass_opacity ?? 0.15}
-              linkedinUrl={merged.linkedin_url ?? undefined}
-              githubUrl={merged.github_url ?? undefined}
-              website={merged.website ?? undefined}
-              email={merged.email_public ?? undefined}
-              fontFamily={persona?.font_family ?? "Space Grotesk"}
-              textAlignment={persona?.text_alignment ?? "left"}
-              cardBlur={persona?.card_blur ?? 12}
-              cardTexture={persona?.card_texture ?? "none"}
-              onFlipToBack={trackCardFlip}
-              onLinkClick={trackLinkClick}
-            />
-          </motion.div>
-        </motion.div>
+          // Other sections go in the details area
+          return (
+            <section key={section.section_type} className="relative z-10" style={{ backgroundColor: landingBgColor }}>
+              <div className="max-w-lg mx-auto px-4 py-8">
+                {renderer()}
+              </div>
+            </section>
+          );
+        })}
 
-        {/* Scroll indicator */}
-        <motion.div
-          className="absolute bottom-8 flex flex-col items-center gap-1"
-          style={{ opacity: chevronOpacity, color: `${persona?.text_color ?? "#ffffff"}66` }}
-        >
-          <span className="text-[10px] font-medium uppercase tracking-widest">Scroll</span>
-          <motion.div
-            animate={{ y: [0, 6, 0] }}
-            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-          >
-            <ChevronDown className="w-5 h-5" />
-          </motion.div>
-        </motion.div>
-      </section>
-
-      {/* ── Details Section: scrolls in from below ── */}
-      <section className="relative z-10 bg-background">
-        <div className="max-w-lg mx-auto px-4 pb-16 pt-12 space-y-6">
-          {/* Identity */}
-          <motion.div
-            className="text-center space-y-2"
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-60px" }}
-            transition={{ duration: 0.5 }}
-          >
-            {merged.avatar_url && (
-              <img
-                src={merged.avatar_url}
-                alt={merged.display_name ?? "Avatar"}
-                className="w-20 h-20 rounded-full mx-auto border-2 border-border object-cover"
-                loading="lazy"
-              />
-            )}
-            <h1 className="text-2xl font-display font-bold">{merged.display_name}</h1>
-            {merged.headline && <p className="text-muted-foreground">{merged.headline}</p>}
-            <div className="flex items-center justify-center gap-2 flex-wrap">
-              {merged.show_availability && (
-                <Badge variant="default" className="gradient-primary text-primary-foreground border-0">
-                  {merged.availability_status ?? "Available"}
-                </Badge>
-              )}
-              {merged.work_mode && <Badge variant="secondary">{merged.work_mode}</Badge>}
-            </div>
-          </motion.div>
-
-          {/* Bio */}
-          {merged.bio && (
-            <motion.div
-              className="glass-card rounded-lg p-4"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-40px" }}
-              transition={{ duration: 0.4, delay: 0.1 }}
-            >
-              <p className="text-sm leading-relaxed text-foreground/90">{merged.bio}</p>
-            </motion.div>
-          )}
-
-          {/* Contact links */}
-          <motion.div
-            className="glass-card rounded-lg divide-y divide-border/60 overflow-hidden"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-40px" }}
-            transition={{ duration: 0.4, delay: 0.15 }}
-          >
-            {merged.show_location && merged.location && (
-              <ContactRow icon={<MapPin className="w-4 h-4" />} label={merged.location} />
-            )}
-            {merged.email_public && (
-              <ContactRow icon={<Mail className="w-4 h-4" />} label={merged.email_public} href={`mailto:${merged.email_public}`} onClick={() => trackLinkClick("email")} />
-            )}
-            {merged.phone && (
-              <ContactRow icon={<Phone className="w-4 h-4" />} label={merged.phone} href={`tel:${merged.phone}`} onClick={() => trackLinkClick("phone")} />
-            )}
-            {merged.website && (
-              <ContactRow icon={<Globe className="w-4 h-4" />} label={merged.website} href={merged.website} external onClick={() => trackLinkClick("website")} />
-            )}
-            {merged.linkedin_url && (
-              <ContactRow icon={<Linkedin className="w-4 h-4" />} label="LinkedIn" href={merged.linkedin_url} external onClick={() => trackLinkClick("linkedin")} />
-            )}
-            {merged.github_url && (
-              <ContactRow icon={<Github className="w-4 h-4" />} label="GitHub" href={merged.github_url} external onClick={() => trackLinkClick("github")} />
-            )}
-          </motion.div>
-
-          {/* Actions */}
-          <motion.div
-            className="space-y-3"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-40px" }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-          >
-            <Button onClick={handleDownloadVCard} className="w-full gradient-primary text-primary-foreground h-12">
-              <UserPlus className="w-4 h-4 mr-2" /> Save Contact
-            </Button>
-            {merged.cv_url && (
-              <Button onClick={handleDownloadCV} variant="outline" className="w-full h-12">
-                <FileText className="w-4 h-4 mr-2" /> Download CV / Resume
-              </Button>
-            )}
-          </motion.div>
-
-          {!ownerIsPro && (
-            <p className="text-center text-xs text-muted-foreground pt-4">
+        {/* Branding */}
+        {!ownerIsPro && (
+          <div className="max-w-lg mx-auto px-4 pb-8">
+            <p className="text-center text-xs" style={{ color: `${textColor}44` }}>
               Powered by <span className="font-display font-semibold">NFC Hub</span>
             </p>
-          )}
-        </div>
-      </section>
-    </div>
+          </div>
+        )}
+      </div>
     </>
   );
 };
 
-function ContactRow({ icon, label, href, external, onClick }: { icon: React.ReactNode; label: string; href?: string; external?: boolean; onClick?: () => void }) {
-  const cls = "flex items-center gap-3 p-3.5 hover:bg-accent/40 transition-colors";
+function ContactRow({ icon, label, href, external, textColor, onClick }: {
+  icon: React.ReactNode; label: string; href?: string; external?: boolean; textColor: string; onClick?: () => void;
+}) {
+  const cls = "flex items-center gap-3 p-3.5 hover:bg-white/5 transition-colors";
   if (href) {
     return (
       <a
@@ -563,15 +663,15 @@ function ContactRow({ icon, label, href, external, onClick }: { icon: React.Reac
         className={cls}
         onClick={onClick}
       >
-        <span className="text-muted-foreground shrink-0">{icon}</span>
-        <span className="text-sm truncate">{label}</span>
+        <span style={{ color: `${textColor}66` }} className="shrink-0">{icon}</span>
+        <span className="text-sm truncate" style={{ color: textColor }}>{label}</span>
       </a>
     );
   }
   return (
     <div className={cls}>
-      <span className="text-muted-foreground shrink-0">{icon}</span>
-      <span className="text-sm">{label}</span>
+      <span style={{ color: `${textColor}66` }} className="shrink-0">{icon}</span>
+      <span className="text-sm" style={{ color: textColor }}>{label}</span>
     </div>
   );
 }
