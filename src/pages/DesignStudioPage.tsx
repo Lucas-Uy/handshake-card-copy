@@ -1,37 +1,59 @@
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/hooks/useSubscription";
-import { UpgradePrompt, UpgradeOverlay } from "@/components/UpgradePrompt";
+import { UpgradeOverlay } from "@/components/UpgradePrompt";
 import { supabase } from "@/integrations/supabase/client";
 import { InteractiveCard3D } from "@/components/InteractiveCard3D";
-import { ColorPickerField } from "@/components/DesignStudio/ColorPickerField";
 import { ImageUploadField } from "@/components/DesignStudio/ImageUploadField";
-import { BACKGROUND_PRESETS, getPresetCss } from "@/components/DesignStudio/BackgroundPresets";
-import { CARD_TEXTURE_PRESETS } from "@/components/DesignStudio/CardTexturePresets";
-import { FONT_PRESETS } from "@/components/DesignStudio/FontPresets";
+import { getPresetCss } from "@/components/DesignStudio/BackgroundPresets";
 import type { PersonaDesign } from "@/components/DesignStudio/types";
-import {
-  Loader2, Monitor, Smartphone, Palette, Save, Eye,
-  CreditCard, Layout, Type,
-  AlignLeft, AlignCenter, AlignRight, FileText, Upload, LayoutGrid,
-} from "lucide-react";
+import { CardDesignPanel } from "@/components/studio/CardDesignPanel";
+import { LandingPagePanel } from "@/components/studio/LandingPagePanel";
+import { IdentityPanel } from "@/components/studio/IdentityPanel";
 import { SectionBuilder } from "@/components/commerce/SectionBuilder";
+import { ProductStore } from "@/components/commerce/ProductStore";
+import { OrderManagement } from "@/components/commerce/OrderManagement";
+import { cn } from "@/lib/utils";
+import {
+  Loader2, Monitor, Smartphone, Save, Eye,
+  CreditCard, Layout, LayoutGrid, User,
+  ShoppingBag, ClipboardList, QrCode, Wifi,
+} from "lucide-react";
 
-const TEXT_ALIGNMENTS = [
-  { id: "left", label: "Left", icon: AlignLeft },
-  { id: "center", label: "Center", icon: AlignCenter },
-  { id: "right", label: "Right", icon: AlignRight },
+type PanelId = "card" | "landing" | "sections" | "identity" | "products" | "orders" | "payment";
+
+const NAV_SECTIONS = [
+  {
+    group: "NFC Card",
+    items: [
+      { id: "card" as PanelId, label: "Card Design", icon: CreditCard },
+    ],
+  },
+  {
+    group: "Page",
+    items: [
+      { id: "landing" as PanelId, label: "Landing Page", icon: Layout },
+      { id: "sections" as PanelId, label: "Page Sections", icon: LayoutGrid },
+    ],
+  },
+  {
+    group: "Content",
+    items: [
+      { id: "identity" as PanelId, label: "Profile & Links", icon: User },
+    ],
+  },
+  {
+    group: "Commerce",
+    items: [
+      { id: "products" as PanelId, label: "Products", icon: ShoppingBag },
+      { id: "orders" as PanelId, label: "Orders", icon: ClipboardList },
+      { id: "payment" as PanelId, label: "Payment", icon: QrCode },
+    ],
+  },
 ];
 
 const DesignStudioPage = () => {
@@ -41,10 +63,13 @@ const DesignStudioPage = () => {
   const [personas, setPersonas] = useState<PersonaDesign[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [editing, setEditing] = useState<PersonaDesign | null>(null);
-  const [username, setUsername] = useState<string>("");
+  const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [deviceMode, setDeviceMode] = useState<"desktop" | "mobile">("desktop");
+  const [activePanel, setActivePanel] = useState<PanelId>("card");
+  const [deviceMode, setDeviceMode] = useState<"desktop" | "mobile">("mobile");
+  const [gcashQr, setGcashQr] = useState<string | null>(null);
+  const [savingQr, setSavingQr] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -59,6 +84,7 @@ const DesignStudioPage = () => {
       if (list.length > 0) {
         setSelectedId(list[0].id);
         setEditing({ ...list[0] });
+        setGcashQr((list[0] as any).gcash_qr_url ?? null);
       }
       setLoading(false);
     };
@@ -67,7 +93,10 @@ const DesignStudioPage = () => {
 
   useEffect(() => {
     const p = personas.find((p) => p.id === selectedId);
-    if (p) setEditing({ ...p });
+    if (p) {
+      setEditing({ ...p });
+      setGcashQr((p as any).gcash_qr_url ?? null);
+    }
   }, [selectedId]);
 
   const update = (field: keyof PersonaDesign, value: unknown) => {
@@ -89,7 +118,19 @@ const DesignStudioPage = () => {
     setSaving(false);
   };
 
+  const saveGcashQr = async () => {
+    if (!selectedId) return;
+    setSavingQr(true);
+    await supabase.from("personas").update({ gcash_qr_url: gcashQr } as any).eq("id", selectedId);
+    toast({ title: "GCash QR saved" });
+    setSavingQr(false);
+  };
+
   const presetCss = getPresetCss(editing?.background_preset);
+  const selectedPersona = personas.find((p) => p.id === selectedId);
+
+  // Panels that show the live preview on the right
+  const showPreview = ["card", "landing", "identity"].includes(activePanel);
 
   if (loading) {
     return (
@@ -104,8 +145,8 @@ const DesignStudioPage = () => {
   if (personas.length === 0) {
     return (
       <DashboardLayout>
-        <div className="glass-card rounded-lg p-12 text-center">
-          <Palette className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+        <div className="glass-card rounded-2xl p-12 text-center">
+          <CreditCard className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
           <p className="text-muted-foreground">
             Create a persona in the{" "}
             <a href="/personas" className="text-primary underline">Persona Vault</a>{" "}
@@ -116,513 +157,251 @@ const DesignStudioPage = () => {
     );
   }
 
+  const renderPanel = () => {
+    switch (activePanel) {
+      case "card":
+        return <CardDesignPanel editing={editing} update={update} isPro={isPro} />;
+      case "landing":
+        return <LandingPagePanel editing={editing} update={update} isPro={isPro} />;
+      case "sections":
+        return isPro ? (
+          selectedId && <SectionBuilder personaId={selectedId} />
+        ) : (
+          <UpgradeOverlay feature="Page Builder" description="Upgrade to Pro to customize page sections.">
+            {selectedId && <SectionBuilder personaId={selectedId} />}
+          </UpgradeOverlay>
+        );
+      case "identity":
+        return <IdentityPanel editing={editing} update={update} isPro={isPro} />;
+      case "products":
+        return selectedId && selectedPersona ? (
+          isPro ? (
+            <ProductStore personaId={selectedId} personaLabel={selectedPersona.label} />
+          ) : (
+            <UpgradeOverlay feature="Product Store" description="Upgrade to Pro to sell products.">
+              <ProductStore personaId={selectedId} personaLabel={selectedPersona.label} />
+            </UpgradeOverlay>
+          )
+        ) : null;
+      case "orders":
+        return isPro ? (
+          <OrderManagement />
+        ) : (
+          <UpgradeOverlay feature="Order Management" description="Upgrade to Pro to manage orders.">
+            <OrderManagement />
+          </UpgradeOverlay>
+        );
+      case "payment":
+        return (
+          <div className="space-y-6">
+            <section className="space-y-3">
+              <h3 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">GCash QR Code</h3>
+              <p className="text-[10px] text-muted-foreground">
+                Upload your GCash QR. Customers see this during checkout when they choose GCash.
+              </p>
+              <ImageUploadField label="GCash QR Image" value={gcashQr} onChange={setGcashQr} folder="gcash-qr" />
+              <Button onClick={saveGcashQr} disabled={savingQr} className="w-full gradient-primary text-primary-foreground rounded-xl h-11">
+                {savingQr ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Save className="w-4 h-4 mr-1" />}
+                Save QR Code
+              </Button>
+            </section>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-4">
-        {/* Header */}
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <div>
-            <h1 className="text-2xl font-display font-bold">Design Studio</h1>
-            <p className="text-sm text-muted-foreground mt-1">Customize your persona's visual identity in real-time</p>
+        {/* Top Bar */}
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div className="flex items-center gap-3">
+            <h1 className="text-xl font-display font-bold">Studio</h1>
+            <Select value={selectedId ?? ""} onValueChange={setSelectedId}>
+              <SelectTrigger className="w-44 rounded-xl h-9 text-xs">
+                <SelectValue placeholder="Select persona" />
+              </SelectTrigger>
+              <SelectContent>
+                {personas.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>{p.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-          <Button onClick={handleSave} disabled={saving} className="gradient-primary text-primary-foreground">
-            {saving ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Save className="w-4 h-4 mr-1.5" />}
-            Save Design
+          <Button onClick={handleSave} disabled={saving} size="sm" className="gradient-primary text-primary-foreground rounded-xl h-9">
+            {saving ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <Save className="w-3.5 h-3.5 mr-1.5" />}
+            Save
           </Button>
         </div>
 
-        {/* Persona selector */}
-        <Select value={selectedId ?? ""} onValueChange={setSelectedId}>
-          <SelectTrigger className="w-64">
-            <SelectValue placeholder="Select persona" />
-          </SelectTrigger>
-          <SelectContent>
-            {personas.map((p) => (
-              <SelectItem key={p.id} value={p.id}>{p.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        {/* Split-screen layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* LEFT: Controls */}
-          <Tabs defaultValue="card" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="card" className="text-xs gap-1">
-                <CreditCard className="w-3.5 h-3.5" /> Card
-              </TabsTrigger>
-              <TabsTrigger value="landing" className="text-xs gap-1">
-                <Layout className="w-3.5 h-3.5" /> Landing
-              </TabsTrigger>
-              <TabsTrigger value="sections" className="text-xs gap-1">
-                <LayoutGrid className="w-3.5 h-3.5" /> Sections
-              </TabsTrigger>
-              <TabsTrigger value="identity" className="text-xs gap-1">
-                <Type className="w-3.5 h-3.5" /> Identity
-              </TabsTrigger>
-            </TabsList>
-
-            {/* ── Card Tab ── */}
-            <TabsContent value="card" className="space-y-4">
-              <Card className="glass-card">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-display flex items-center gap-2">
-                    <Palette className="w-4 h-4" /> Card Colors
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    <ColorPickerField
-                      label="Primary / Accent"
-                      value={editing?.accent_color ?? "#0d9488"}
-                      onChange={(v) => update("accent_color", v)}
-                    />
-                    <ColorPickerField
-                      label="Secondary"
-                      value={editing?.secondary_color ?? editing?.accent_color ?? "#0d9488"}
-                      onChange={(v) => update("secondary_color", v)}
-                    />
-                    <ColorPickerField
-                      label="Tertiary"
-                      value={editing?.tertiary_color ?? editing?.accent_color ?? "#0d9488"}
-                      onChange={(v) => update("tertiary_color", v)}
-                    />
-                    <ColorPickerField
-                      label="Text Color"
-                      value={editing?.text_color ?? "#ffffff"}
-                      onChange={(v) => update("text_color", v)}
-                    />
-                  </div>
-
-                  <Separator />
-
-                  <div className="space-y-2">
-                    <Label>Card Glass Opacity: {Math.round((editing?.glass_opacity ?? 0.15) * 100)}%</Label>
-                    <p className="text-[10px] text-muted-foreground">Controls the frosted-glass overlay darkness</p>
-                    <Slider
-                      value={[(editing?.glass_opacity ?? 0.15) * 100]}
-                      onValueChange={([v]) => update("glass_opacity", v / 100)}
-                      min={0}
-                      max={80}
-                      step={5}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Background Blur: {editing?.card_blur ?? 12}px</Label>
-                    <p className="text-[10px] text-muted-foreground">Controls the blur intensity on the card background</p>
-                    <Slider
-                      value={[editing?.card_blur ?? 12]}
-                      onValueChange={([v]) => update("card_blur", v)}
-                      min={0}
-                      max={40}
-                      step={1}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="glass-card">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-display">Card Background Image</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {isPro ? (
-                    <>
-                      <ImageUploadField
-                        label="Card Face Background"
-                        value={editing?.card_bg_image_url ?? null}
-                        onChange={(url) => update("card_bg_image_url", url)}
-                        folder="card-bg"
-                      />
-
-                      {editing?.card_bg_image_url && (
-                        <div className="space-y-2">
-                          <Label>Image Sizing</Label>
-                          <div className="grid grid-cols-2 gap-2">
-                            {([
-                              { id: "cover", label: "Stretched", desc: "Fills entire card" },
-                              { id: "contain", label: "Fitted", desc: "Fits without cropping" },
-                              { id: "center", label: "Centered", desc: "Original size, centered" },
-                              { id: "original", label: "Original", desc: "Top-left, no scaling" },
-                            ] as const).map((opt) => (
-                              <button
-                                key={opt.id}
-                                onClick={() => update("card_bg_size", opt.id)}
-                                className={`p-2 rounded-lg border text-xs text-left transition-all ${
-                                  (editing?.card_bg_size ?? "cover") === opt.id
-                                    ? "border-primary bg-primary/10 ring-1 ring-primary/30"
-                                    : "border-border hover:border-primary/40"
-                                }`}
-                              >
-                                <span className="font-medium block">{opt.label}</span>
-                                <span className="text-[10px] text-muted-foreground">{opt.desc}</span>
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      <p className="text-[10px] text-muted-foreground">
-                        Replaces the gradient with your own image or GIF on the card face.
-                      </p>
-                    </>
-                  ) : (
-                    <UpgradePrompt feature="Custom Card Backgrounds" description="Upload your own images and GIFs for the card face with Pro." />
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Card Texture Presets — Enhanced */}
-              <Card className="glass-card">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-display flex items-center gap-2">
-                    <Palette className="w-4 h-4" /> Card Texture
-                  </CardTitle>
-                  <p className="text-[10px] text-muted-foreground">Apply a subtle surface pattern to your card</p>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 gap-3">
-                    {CARD_TEXTURE_PRESETS.map((preset) => (
+        {/* Main Layout: Sidebar + Panel + Preview */}
+        <div className="flex gap-0 rounded-2xl border border-border/60 bg-card/30 backdrop-blur-sm overflow-hidden" style={{ minHeight: "calc(100vh - 180px)" }}>
+          {/* Sub-Sidebar Nav */}
+          <nav className="w-52 shrink-0 border-r border-border/40 bg-card/50 hidden md:block overflow-y-auto">
+            <div className="p-3 space-y-1">
+              {NAV_SECTIONS.map((section) => (
+                <div key={section.group} className="mb-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 px-3 py-2">
+                    {section.group}
+                  </p>
+                  {section.items.map((item) => {
+                    const Icon = item.icon;
+                    const active = activePanel === item.id;
+                    return (
                       <button
-                        key={preset.id}
-                        onClick={() => update("card_texture", preset.id)}
-                        className={`relative rounded-xl border-2 text-xs text-center transition-all overflow-hidden ${
-                          editing?.card_texture === preset.id
-                            ? "border-primary ring-2 ring-primary/30 shadow-lg shadow-primary/10"
-                            : "border-border hover:border-primary/50 hover:shadow-md"
-                        }`}
-                      >
-                        <div
-                          className="h-20 w-full"
-                          style={{
-                            backgroundImage: preset.css !== "none" ? preset.css : undefined,
-                            backgroundSize: "backgroundSize" in preset ? preset.backgroundSize : undefined,
-                            backgroundColor: "#1a1a2e",
-                          }}
-                        />
-                        <div className="p-2 bg-card/80 backdrop-blur-sm">
-                          <span className="font-medium">{preset.label}</span>
-                        </div>
-                        {editing?.card_texture === preset.id && (
-                          <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-                            <span className="text-[10px] text-primary-foreground">✓</span>
-                          </div>
+                        key={item.id}
+                        onClick={() => setActivePanel(item.id)}
+                        className={cn(
+                          "w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all",
+                          active
+                            ? "bg-primary/10 text-primary"
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                         )}
+                      >
+                        <Icon className="w-4 h-4 shrink-0" />
+                        {item.label}
                       </button>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Typography on Card */}
-              <Card className="glass-card">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-display">Card Typography</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Font Family {!isPro && <UpgradePrompt feature="Custom Fonts" compact />}</Label>
-                    <Select
-                      value={editing?.font_family ?? "Space Grotesk"}
-                      onValueChange={(v) => update("font_family", v)}
-                      disabled={!isPro}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {FONT_PRESETS.map((f) => (
-                          <SelectItem key={f.id} value={f.id}>
-                            <span style={{ fontFamily: f.stack }}>{f.label}</span>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Text Placement</Label>
-                    <div className="flex gap-2">
-                      {TEXT_ALIGNMENTS.map((a) => {
-                        const Icon = a.icon;
-                        return (
-                          <button
-                            key={a.id}
-                            onClick={() => update("text_alignment", a.id)}
-                            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg border text-xs transition-colors ${
-                              (editing?.text_alignment ?? "left") === a.id
-                                ? "border-primary bg-primary/10 text-primary"
-                                : "border-border hover:border-primary/40"
-                            }`}
-                          >
-                            <Icon className="w-3.5 h-3.5" />
-                            {a.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* ── Landing Page Tab ── */}
-            <TabsContent value="landing" className="space-y-4">
-              <Card className="glass-card">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-display">Landing Page Background</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <ColorPickerField
-                    label="Background Color"
-                    value={editing?.landing_bg_color ?? "#0a0a0f"}
-                    onChange={(v) => update("landing_bg_color", v)}
-                  />
-
-                  <Separator />
-
-                  <div className="space-y-2">
-                    <Label>Background Preset Overlay</Label>
-                    <p className="text-[10px] text-muted-foreground mb-2">Choose a decorative pattern overlay for your landing page</p>
-                    <div className="grid grid-cols-2 gap-3">
-                      {BACKGROUND_PRESETS.map((preset) => (
-                        <button
-                          key={preset.id}
-                          onClick={() => update("background_preset", preset.id)}
-                          className={`relative rounded-xl border-2 text-xs text-center transition-all overflow-hidden ${
-                            editing?.background_preset === preset.id
-                              ? "border-primary ring-2 ring-primary/30 shadow-lg shadow-primary/10"
-                              : "border-border hover:border-primary/50 hover:shadow-md"
-                          }`}
-                        >
-                          <div
-                            className="h-20 w-full"
-                            style={{
-                              backgroundImage: preset.css !== "none" ? preset.css : undefined,
-                              backgroundColor: editing?.landing_bg_color ?? "#0a0a0f",
-                            }}
-                          />
-                          <div className="p-2 bg-card/80 backdrop-blur-sm">
-                            <span className="font-medium">{preset.label}</span>
-                          </div>
-                          {editing?.background_preset === preset.id && (
-                            <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-                              <span className="text-[10px] text-primary-foreground">✓</span>
-                            </div>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  {isPro ? (
-                    <>
-                      <ImageUploadField
-                        label="Background Image"
-                        value={editing?.background_image_url ?? null}
-                        onChange={(url) => update("background_image_url", url)}
-                        folder="landing-bg"
-                      />
-                      <p className="text-[10px] text-muted-foreground">
-                        Overrides the color & preset with a full-bleed background image.
-                      </p>
-                    </>
-                  ) : (
-                    <UpgradePrompt feature="Custom Landing Page Background" description="Upload your own background images with Pro." />
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* ── Sections Tab (Page Builder) ── */}
-            <TabsContent value="sections" className="space-y-4">
-              {isPro ? (
-                selectedId && <SectionBuilder personaId={selectedId} />
-              ) : (
-                <UpgradeOverlay feature="Page Builder" description="Upgrade to Pro to reorder and customize landing page sections.">
-                  {selectedId && <SectionBuilder personaId={selectedId} />}
-                </UpgradeOverlay>
-              )}
-            </TabsContent>
-
-            <TabsContent value="identity" className="space-y-4">
-              <Card className="glass-card">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-display">Profile Info</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="space-y-1">
-                    <Label>Display Name</Label>
-                    <Input value={editing?.display_name ?? ""} onChange={(e) => update("display_name", e.target.value)} />
-                  </div>
-                  <div className="space-y-1">
-                    <Label>Headline</Label>
-                    <Input value={editing?.headline ?? ""} onChange={(e) => update("headline", e.target.value)} placeholder="Full-Stack Developer" />
-                  </div>
-                  <div className="space-y-1">
-                    <Label>Bio</Label>
-                    <Input value={editing?.bio ?? ""} onChange={(e) => update("bio", e.target.value)} />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="glass-card">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-display">Socials</CardTitle>
-                </CardHeader>
-                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <Label>Email</Label>
-                    <Input value={editing?.email_public ?? ""} onChange={(e) => update("email_public", e.target.value)} />
-                  </div>
-                  <div className="space-y-1">
-                    <Label>Website</Label>
-                    <Input value={editing?.website ?? ""} onChange={(e) => update("website", e.target.value)} />
-                  </div>
-                  <div className="space-y-1">
-                    <Label>LinkedIn</Label>
-                    <Input value={editing?.linkedin_url ?? ""} onChange={(e) => update("linkedin_url", e.target.value)} />
-                  </div>
-                  <div className="space-y-1">
-                    <Label>GitHub</Label>
-                    <Input value={editing?.github_url ?? ""} onChange={(e) => update("github_url", e.target.value)} />
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* CV / Resume Upload */}
-              <Card className="glass-card">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-display flex items-center gap-2">
-                    <FileText className="w-4 h-4" /> CV / Resume
-                  </CardTitle>
-                  <p className="text-[10px] text-muted-foreground">Optional — appears as a download button on your landing page</p>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {isPro ? (
-                    <>
-                      {editing?.cv_url ? (
-                        <div className="flex items-center gap-2">
-                          <Badge variant="secondary" className="text-xs truncate max-w-[200px]">
-                            {editing.cv_url.split("/").pop()}
-                          </Badge>
-                          <Button size="sm" variant="ghost" className="text-xs h-7 text-destructive" onClick={() => update("cv_url", null)}>
-                            Remove
-                          </Button>
-                        </div>
-                      ) : (
-                        <p className="text-xs text-muted-foreground">No CV uploaded yet</p>
-                      )}
-                      <ImageUploadField
-                        label="Upload CV (PDF or image)"
-                        value={editing?.cv_url ?? null}
-                        onChange={(url) => update("cv_url", url)}
-                        folder="cv-uploads"
-                      />
-                    </>
-                  ) : (
-                    <UpgradePrompt feature="CV / Resume Hosting" description="Upload and track CV downloads with Pro." />
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-
-          {/* RIGHT: Live Preview */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Eye className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm font-display font-semibold">Live Preview</span>
-              </div>
-              <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
-                <Button size="sm" variant={deviceMode === "desktop" ? "default" : "ghost"} className="h-7 px-2" onClick={() => setDeviceMode("desktop")}>
-                  <Monitor className="w-3.5 h-3.5" />
-                </Button>
-                <Button size="sm" variant={deviceMode === "mobile" ? "default" : "ghost"} className="h-7 px-2" onClick={() => setDeviceMode("mobile")}>
-                  <Smartphone className="w-3.5 h-3.5" />
-                </Button>
-              </div>
+                    );
+                  })}
+                </div>
+              ))}
             </div>
+          </nav>
 
-            <div className="flex justify-center">
-              <div
-                className={`relative rounded-2xl border-2 border-border overflow-hidden transition-all duration-300 ${
-                  deviceMode === "mobile"
-                    ? "w-[375px] min-h-[667px] border-[8px] border-muted-foreground/20 rounded-[2rem]"
-                    : "w-full min-h-[500px]"
-                }`}
-                style={{
-                  backgroundColor: editing?.landing_bg_color ?? "hsl(var(--background))",
-                  backgroundImage: editing?.background_image_url
-                    ? `url(${editing.background_image_url})`
-                    : presetCss !== "none"
-                    ? presetCss
-                    : undefined,
-                  backgroundSize: editing?.background_image_url ? "cover" : undefined,
-                  backgroundPosition: editing?.background_image_url ? "center" : undefined,
-                }}
-              >
-                <div className="relative flex flex-col items-center justify-center min-h-[400px] p-6">
-                  <div
-                    className="pointer-events-none absolute inset-0"
-                    style={{
-                      background: `radial-gradient(ellipse 60% 50% at 50% 50%, ${editing?.accent_color ?? "#0d9488"}15, transparent 70%)`,
-                    }}
-                  />
-
-                  <div className="flex items-center gap-2 absolute top-4">
-                    <div className="w-5 h-5 rounded-md flex items-center justify-center" style={{ background: editing?.accent_color ?? "#0d9488" }}>
-                      <span className="text-[8px] font-bold" style={{ color: editing?.text_color ?? "#fff" }}>N</span>
-                    </div>
-                    <span className="text-[10px] font-display font-semibold tracking-widest uppercase text-muted-foreground">
-                      NFC Hub
-                    </span>
-                  </div>
-
-                  <InteractiveCard3D
-                    name={editing?.display_name ?? "Your Name"}
-                    headline={editing?.headline ?? undefined}
-                    avatarUrl={editing?.avatar_url ?? undefined}
-                    username={username}
-                    accentColor={editing?.accent_color ?? "#0d9488"}
-                    secondaryColor={editing?.secondary_color ?? undefined}
-                    tertiaryColor={editing?.tertiary_color ?? undefined}
-                    textColor={editing?.text_color ?? "#ffffff"}
-                    cardBgImageUrl={editing?.card_bg_image_url ?? undefined}
-                    cardBgSize={editing?.card_bg_size ?? "cover"}
-                    glassOpacity={editing?.glass_opacity ?? 0.15}
-                    linkedinUrl={editing?.linkedin_url ?? undefined}
-                    githubUrl={editing?.github_url ?? undefined}
-                    website={editing?.website ?? undefined}
-                    email={editing?.email_public ?? undefined}
-                    fontFamily={editing?.font_family ?? "Space Grotesk"}
-                    textAlignment={editing?.text_alignment ?? "left"}
-                    cardBlur={editing?.card_blur ?? 12}
-                    cardTexture={editing?.card_texture ?? "none"}
-                  />
-
-                  <div className="w-full max-w-sm space-y-3 mt-6 opacity-60">
-                    <div className="text-center">
-                      <h2 className="text-sm font-display font-bold">{editing?.display_name || "Your Name"}</h2>
-                      {editing?.headline && <p className="text-[10px] text-muted-foreground">{editing.headline}</p>}
-                    </div>
-                    {editing?.bio && (
-                      <div className="glass-card rounded-lg p-2 text-[10px] leading-relaxed">
-                        {editing.bio}
-                      </div>
+          {/* Mobile Nav */}
+          <div className="md:hidden w-full border-b border-border/40 bg-card/50 overflow-x-auto">
+            <div className="flex gap-1 p-2 min-w-max">
+              {NAV_SECTIONS.flatMap((s) => s.items).map((item) => {
+                const Icon = item.icon;
+                const active = activePanel === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => setActivePanel(item.id)}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-2 rounded-xl text-[11px] font-medium whitespace-nowrap transition-all",
+                      active ? "bg-primary/10 text-primary" : "text-muted-foreground"
                     )}
-                    <Button size="sm" className="w-full text-xs" style={{ background: editing?.accent_color ?? "#0d9488", color: editing?.text_color ?? "#fff" }}>
-                      Save Contact
-                    </Button>
+                  >
+                    <Icon className="w-3.5 h-3.5" />
+                    {item.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Panel Content */}
+          <div className={cn(
+            "flex-1 overflow-y-auto p-5",
+            showPreview ? "lg:border-r lg:border-border/40" : ""
+          )}>
+            {renderPanel()}
+          </div>
+
+          {/* Live Preview */}
+          {showPreview && (
+            <div className="w-[420px] shrink-0 hidden lg:flex flex-col overflow-y-auto bg-background/50">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-border/40">
+                <div className="flex items-center gap-2">
+                  <Eye className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Preview</span>
+                </div>
+                <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-0.5">
+                  <Button size="sm" variant={deviceMode === "desktop" ? "default" : "ghost"} className="h-6 w-6 p-0" onClick={() => setDeviceMode("desktop")}>
+                    <Monitor className="w-3 h-3" />
+                  </Button>
+                  <Button size="sm" variant={deviceMode === "mobile" ? "default" : "ghost"} className="h-6 w-6 p-0" onClick={() => setDeviceMode("mobile")}>
+                    <Smartphone className="w-3 h-3" />
+                  </Button>
+                </div>
+              </div>
+
+              <div className="flex-1 flex items-start justify-center p-4">
+                <div
+                  className={cn(
+                    "relative rounded-2xl border border-border/60 overflow-hidden transition-all duration-300",
+                    deviceMode === "mobile"
+                      ? "w-[320px] min-h-[580px] border-[6px] border-muted-foreground/15 rounded-[2rem]"
+                      : "w-full min-h-[400px]"
+                  )}
+                  style={{
+                    backgroundColor: editing?.landing_bg_color ?? "hsl(var(--background))",
+                    backgroundImage: editing?.background_image_url
+                      ? `url(${editing.background_image_url})`
+                      : presetCss !== "none" ? presetCss : undefined,
+                    backgroundSize: editing?.background_image_url ? "cover" : undefined,
+                    backgroundPosition: editing?.background_image_url ? "center" : undefined,
+                  }}
+                >
+                  <div className="relative flex flex-col items-center justify-center min-h-[350px] p-4">
+                    <div
+                      className="pointer-events-none absolute inset-0"
+                      style={{ background: `radial-gradient(ellipse 60% 50% at 50% 50%, ${editing?.accent_color ?? "#0d9488"}15, transparent 70%)` }}
+                    />
+
+                    <div className="flex items-center gap-1.5 absolute top-3">
+                      <div className="w-4 h-4 rounded-md flex items-center justify-center" style={{ background: editing?.accent_color ?? "#0d9488" }}>
+                        <Wifi className="w-2 h-2 text-white" />
+                      </div>
+                      <span className="text-[9px] font-display font-semibold tracking-widest uppercase text-muted-foreground">
+                        NFC Hub
+                      </span>
+                    </div>
+
+                    <div className="scale-[0.8] origin-center">
+                      <InteractiveCard3D
+                        name={editing?.display_name ?? "Your Name"}
+                        headline={editing?.headline ?? undefined}
+                        avatarUrl={editing?.avatar_url ?? undefined}
+                        username={username}
+                        accentColor={editing?.accent_color ?? "#0d9488"}
+                        secondaryColor={editing?.secondary_color ?? undefined}
+                        tertiaryColor={editing?.tertiary_color ?? undefined}
+                        textColor={editing?.text_color ?? "#ffffff"}
+                        cardBgImageUrl={editing?.card_bg_image_url ?? undefined}
+                        cardBgSize={editing?.card_bg_size ?? "cover"}
+                        glassOpacity={editing?.glass_opacity ?? 0.15}
+                        linkedinUrl={editing?.linkedin_url ?? undefined}
+                        githubUrl={editing?.github_url ?? undefined}
+                        website={editing?.website ?? undefined}
+                        email={editing?.email_public ?? undefined}
+                        fontFamily={editing?.font_family ?? "Space Grotesk"}
+                        textAlignment={editing?.text_alignment ?? "left"}
+                        cardBlur={editing?.card_blur ?? 12}
+                        cardTexture={editing?.card_texture ?? "none"}
+                      />
+                    </div>
+
+                    <div className="w-full max-w-[280px] space-y-2 mt-4 opacity-60">
+                      <div className="text-center">
+                        <h2 className="text-xs font-display font-bold" style={{ color: editing?.text_color ?? "#fff" }}>
+                          {editing?.display_name || "Your Name"}
+                        </h2>
+                        {editing?.headline && (
+                          <p className="text-[9px]" style={{ color: `${editing?.text_color ?? "#fff"}99` }}>{editing.headline}</p>
+                        )}
+                      </div>
+                      {editing?.bio && (
+                        <div className="rounded-xl p-2 text-[9px] leading-relaxed bg-white/5 backdrop-blur-md border border-white/10" style={{ color: `${editing?.text_color ?? "#fff"}cc` }}>
+                          {editing.bio}
+                        </div>
+                      )}
+                      <Button
+                        size="sm"
+                        className="w-full text-[10px] h-8 rounded-xl"
+                        style={{ background: editing?.accent_color ?? "#0d9488", color: editing?.text_color ?? "#fff" }}
+                      >
+                        Save Contact
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </DashboardLayout>
