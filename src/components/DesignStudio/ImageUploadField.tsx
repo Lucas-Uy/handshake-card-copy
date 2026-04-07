@@ -112,8 +112,8 @@ export function ImageUploadField({ label, value, onChange, folder, showFitContro
     updateFit({ objectPosition: `${newX}% ${newY}%` });
   };
 
-  const currentFit = imageFit?.objectFit ?? "cover";
-  const currentScale = imageFit?.scale ?? 100;
+  const currentFit = effectiveFit?.objectFit ?? "cover";
+  const currentScale = effectiveFit?.scale ?? 100;
 
   const otherRecent = recentUploads.filter((u) => u !== value);
 
