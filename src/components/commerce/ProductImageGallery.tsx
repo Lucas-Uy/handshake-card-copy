@@ -25,7 +25,7 @@ export function ProductImageGallery({ productId, onImagesChange }: ProductImageG
   const [uploading, setUploading] = useState(false);
 
   const loadImages = async () => {
-    const { data } = await supabase
+    const { data } = await (supabase as any)
       .from("product_images")
       .select("*")
       .eq("product_id", productId)
@@ -43,18 +43,18 @@ export function ProductImageGallery({ productId, onImagesChange }: ProductImageG
   const addImage = async (url: string | null, isVideo = false) => {
     if (!url) return;
     setUploading(true);
-    await supabase.from("product_images").insert({
+    await (supabase as any).from("product_images").insert({
       product_id: productId,
       image_url: url,
       sort_order: images.length,
       is_video: isVideo,
-    } as any);
+    });
     await loadImages();
     setUploading(false);
   };
 
   const removeImage = async (id: string) => {
-    await supabase.from("product_images").delete().eq("id", id);
+    await (supabase as any).from("product_images").delete().eq("id", id);
     await loadImages();
   };
 

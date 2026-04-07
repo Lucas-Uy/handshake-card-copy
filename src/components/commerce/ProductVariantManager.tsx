@@ -34,7 +34,7 @@ export function ProductVariantManager({ productId }: ProductVariantManagerProps)
   const [newStock, setNewStock] = useState("0");
 
   const loadVariants = async () => {
-    const { data } = await supabase
+    const { data } = await (supabase as any)
       .from("product_variants")
       .select("*")
       .eq("product_id", productId)
@@ -50,14 +50,14 @@ export function ProductVariantManager({ productId }: ProductVariantManagerProps)
   const addVariant = async () => {
     if (!newValue.trim()) return;
     setAdding(true);
-    await supabase.from("product_variants").insert({
+    await (supabase as any).from("product_variants").insert({
       product_id: productId,
       variant_type: newType,
       variant_value: newValue.trim(),
       price_modifier: parseFloat(newPrice) || 0,
       stock: parseInt(newStock) || 0,
       sort_order: variants.length,
-    } as any);
+    });
     setNewValue("");
     setNewPrice("0");
     setNewStock("0");
@@ -66,7 +66,7 @@ export function ProductVariantManager({ productId }: ProductVariantManagerProps)
   };
 
   const removeVariant = async (id: string) => {
-    await supabase.from("product_variants").delete().eq("id", id);
+    await (supabase as any).from("product_variants").delete().eq("id", id);
     await loadVariants();
   };
 
