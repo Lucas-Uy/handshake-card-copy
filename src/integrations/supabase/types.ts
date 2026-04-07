@@ -179,6 +179,139 @@ export type Database = {
           },
         ]
       }
+      order_items: {
+        Row: {
+          id: string
+          order_id: string
+          product_id: string
+          quantity: number
+          unit_price: number
+        }
+        Insert: {
+          id?: string
+          order_id: string
+          product_id: string
+          quantity?: number
+          unit_price?: number
+        }
+        Update: {
+          id?: string
+          order_id?: string
+          product_id?: string
+          quantity?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          buyer_location: string
+          buyer_name: string
+          buyer_phone: string
+          created_at: string
+          id: string
+          notes: string | null
+          payment_method: string
+          persona_id: string
+          seller_user_id: string
+          status: string
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          buyer_location: string
+          buyer_name: string
+          buyer_phone: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          payment_method?: string
+          persona_id: string
+          seller_user_id: string
+          status?: string
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          buyer_location?: string
+          buyer_name?: string
+          buyer_phone?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          payment_method?: string
+          persona_id?: string
+          seller_user_id?: string
+          status?: string
+          total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_persona_id_fkey"
+            columns: ["persona_id"]
+            isOneToOne: false
+            referencedRelation: "personas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      persona_sections: {
+        Row: {
+          config: Json
+          created_at: string
+          id: string
+          is_visible: boolean
+          persona_id: string
+          section_type: string
+          sort_order: number
+          user_id: string
+        }
+        Insert: {
+          config?: Json
+          created_at?: string
+          id?: string
+          is_visible?: boolean
+          persona_id: string
+          section_type: string
+          sort_order?: number
+          user_id: string
+        }
+        Update: {
+          config?: Json
+          created_at?: string
+          id?: string
+          is_visible?: boolean
+          persona_id?: string
+          section_type?: string
+          sort_order?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "persona_sections_persona_id_fkey"
+            columns: ["persona_id"]
+            isOneToOne: false
+            referencedRelation: "personas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       personas: {
         Row: {
           accent_color: string | null
@@ -196,6 +329,7 @@ export type Database = {
           display_name: string | null
           email_public: string | null
           font_family: string | null
+          gcash_qr_url: string | null
           github_url: string | null
           glass_opacity: number | null
           headline: string | null
@@ -237,6 +371,7 @@ export type Database = {
           display_name?: string | null
           email_public?: string | null
           font_family?: string | null
+          gcash_qr_url?: string | null
           github_url?: string | null
           glass_opacity?: number | null
           headline?: string | null
@@ -278,6 +413,7 @@ export type Database = {
           display_name?: string | null
           email_public?: string | null
           font_family?: string | null
+          gcash_qr_url?: string | null
           github_url?: string | null
           glass_opacity?: number | null
           headline?: string | null
@@ -304,6 +440,59 @@ export type Database = {
           work_mode?: string | null
         }
         Relationships: []
+      }
+      products: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          is_visible: boolean
+          name: string
+          persona_id: string
+          price: number
+          sort_order: number
+          stock: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_visible?: boolean
+          name: string
+          persona_id: string
+          price?: number
+          sort_order?: number
+          stock?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_visible?: boolean
+          name?: string
+          persona_id?: string
+          price?: number
+          sort_order?: number
+          stock?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_persona_id_fkey"
+            columns: ["persona_id"]
+            isOneToOne: false
+            referencedRelation: "personas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -483,6 +672,7 @@ export type Database = {
           display_name: string
           email_public: string
           font_family: string
+          gcash_qr_url: string
           github_url: string
           glass_opacity: number
           has_pin: boolean

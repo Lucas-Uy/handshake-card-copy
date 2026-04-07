@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/hooks/useSubscription";
-import { UpgradePrompt } from "@/components/UpgradePrompt";
+import { UpgradePrompt, UpgradeOverlay } from "@/components/UpgradePrompt";
 import { supabase } from "@/integrations/supabase/client";
 import { InteractiveCard3D } from "@/components/InteractiveCard3D";
 import { ColorPickerField } from "@/components/DesignStudio/ColorPickerField";
@@ -24,8 +24,9 @@ import type { PersonaDesign } from "@/components/DesignStudio/types";
 import {
   Loader2, Monitor, Smartphone, Palette, Save, Eye,
   CreditCard, Layout, Type,
-  AlignLeft, AlignCenter, AlignRight, FileText, Upload,
+  AlignLeft, AlignCenter, AlignRight, FileText, Upload, LayoutGrid,
 } from "lucide-react";
+import { SectionBuilder } from "@/components/commerce/SectionBuilder";
 
 const TEXT_ALIGNMENTS = [
   { id: "left", label: "Left", icon: AlignLeft },
@@ -146,12 +147,15 @@ const DesignStudioPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* LEFT: Controls */}
           <Tabs defaultValue="card" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="card" className="text-xs gap-1">
                 <CreditCard className="w-3.5 h-3.5" /> Card
               </TabsTrigger>
               <TabsTrigger value="landing" className="text-xs gap-1">
-                <Layout className="w-3.5 h-3.5" /> Landing Page
+                <Layout className="w-3.5 h-3.5" /> Landing
+              </TabsTrigger>
+              <TabsTrigger value="sections" className="text-xs gap-1">
+                <LayoutGrid className="w-3.5 h-3.5" /> Sections
               </TabsTrigger>
               <TabsTrigger value="identity" className="text-xs gap-1">
                 <Type className="w-3.5 h-3.5" /> Identity
@@ -433,7 +437,17 @@ const DesignStudioPage = () => {
               </Card>
             </TabsContent>
 
-            {/* ── Identity Tab ── */}
+            {/* ── Sections Tab (Page Builder) ── */}
+            <TabsContent value="sections" className="space-y-4">
+              {isPro ? (
+                selectedId && <SectionBuilder personaId={selectedId} />
+              ) : (
+                <UpgradeOverlay feature="Page Builder" description="Upgrade to Pro to reorder and customize landing page sections.">
+                  {selectedId && <SectionBuilder personaId={selectedId} />}
+                </UpgradeOverlay>
+              )}
+            </TabsContent>
+
             <TabsContent value="identity" className="space-y-4">
               <Card className="glass-card">
                 <CardHeader className="pb-2">
