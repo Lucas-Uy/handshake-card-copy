@@ -43,7 +43,6 @@ export interface NfcStats {
   cvDownloads: number;
   vcardDownloads: number;
   topDevice: string;
-  topLocation: string;
   // Security
   authSuccessRate: number;
   leadGenCount: number;
@@ -60,9 +59,8 @@ export interface NfcStats {
   linkCTR: LinkCTR[];
   personaPerformance: PersonaPerf[];
   connectionSources: { nfc: number; qr: number; direct: number };
-  // New: Tap Velocity & Geographic
+  // New: Tap Velocity
   tapVelocity: { label: string; taps: number }[];
-  regionBreakdown: { region: string; count: number }[];
 }
 
 const DEVICE_COLORS: Record<string, string> = {
