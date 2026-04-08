@@ -167,7 +167,10 @@ const PageBuilderPage = () => {
       .eq("page_id", selectedPageId!)
       .eq("user_id", user!.id)
       .order("sort_order");
-    setBlocks((data as PageBlock[]) ?? []);
+    const loaded = (data as PageBlock[]) ?? [];
+    setBlocks(loaded);
+    historyRef.current = [JSON.parse(JSON.stringify(loaded))];
+    historyIdxRef.current = 0;
   };
 
   const addPage = async () => {
@@ -212,19 +215,27 @@ const PageBuilderPage = () => {
     };
     const { data } = await supabase.from("page_blocks").insert(newBlock).select().single();
     if (data) {
-      setBlocks([...blocks, data as PageBlock]);
+      const newBlocks = [...blocks, data as PageBlock];
+      setBlocks(newBlocks);
+      pushHistory(newBlocks);
       setEditingBlockId(data.id);
       setAddBlockOpen(false);
     }
   };
 
   const updateBlock = (updated: PageBlock) => {
-    setBlocks(blocks.map(b => b.id === updated.id ? updated : b));
+    const newBlocks = blocks.map(b => b.id === updated.id ? updated : b);
+    setBlocks(newBlocks);
+    pushHistory(newBlocks);
   };
 
   const deleteBlock = async (id: string) => {
     await supabase.from("page_blocks").delete().eq("id", id);
-    setBlocks(blocks.filter(b => b.id !== id));
+    const newBlocks = blocks.filter(b => b.id !== id);
+    setBlocks(newBlocks);
+    pushHistory(newBlocks);
+    setEditingBlockId(null);
+  };
     setEditingBlockId(null);
   };
 
