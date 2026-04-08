@@ -7,6 +7,7 @@ import { SecurityGate } from "@/components/SecurityGate";
 import { CardDisabledPage } from "@/components/CardDisabledPage";
 import { PublicProductGrid } from "@/components/commerce/PublicProductGrid";
 import { BlockRenderer } from "@/components/page-builder/BlockRenderer";
+import { PublicPageNav } from "@/components/page-builder/PublicPageNav";
 import type { PageBlock } from "@/components/page-builder/types";
 import { downloadVCard } from "@/lib/vcard";
 import { getPresetCss } from "@/components/DesignStudio/BackgroundPresets";
@@ -93,6 +94,8 @@ const PublicProfilePage = () => {
   const [sections, setSections] = useState<SectionData[]>([]);
   const [pageBlocks, setPageBlocks] = useState<PageBlock[]>([]);
   const [hasPageBuilder, setHasPageBuilder] = useState(false);
+  const [sitePages, setSitePages] = useState<{ id: string; title: string; slug: string; is_homepage: boolean; page_icon: string | null }[]>([]);
+  const [activePageId, setActivePageId] = useState<string | null>(null);
   const [ownerIsPro, setOwnerIsPro] = useState(false);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
