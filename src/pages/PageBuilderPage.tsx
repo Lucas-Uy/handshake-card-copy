@@ -352,6 +352,14 @@ const PageBuilderPage = () => {
             </Select>
           </div>
           <div className="flex items-center gap-2">
+            <div className="flex items-center gap-0.5">
+              <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={undo} title="Undo (Ctrl+Z)" disabled={historyIdxRef.current <= 0}>
+                <Undo2 className="w-3.5 h-3.5" />
+              </Button>
+              <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={redo} title="Redo (Ctrl+Shift+Z)" disabled={historyIdxRef.current >= historyRef.current.length - 1}>
+                <Redo2 className="w-3.5 h-3.5" />
+              </Button>
+            </div>
             <div className="hidden md:flex items-center gap-1 bg-muted/50 rounded-lg p-0.5">
               <Button size="sm" variant={deviceMode === "desktop" ? "default" : "ghost"} className="h-6 w-6 p-0" onClick={() => setDeviceMode("desktop")}>
                 <Monitor className="w-3 h-3" />
