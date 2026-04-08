@@ -6,6 +6,8 @@ import { InteractiveCard3D } from "@/components/InteractiveCard3D";
 import { SecurityGate } from "@/components/SecurityGate";
 import { CardDisabledPage } from "@/components/CardDisabledPage";
 import { PublicProductGrid } from "@/components/commerce/PublicProductGrid";
+import { BlockRenderer } from "@/components/page-builder/BlockRenderer";
+import type { PageBlock } from "@/components/page-builder/types";
 import { downloadVCard } from "@/lib/vcard";
 import { getPresetCss } from "@/components/DesignStudio/BackgroundPresets";
 import { getFontStack, getGoogleFontUrl } from "@/components/DesignStudio/FontPresets";
@@ -89,6 +91,8 @@ const PublicProfilePage = () => {
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [persona, setPersona] = useState<PersonaData | null>(null);
   const [sections, setSections] = useState<SectionData[]>([]);
+  const [pageBlocks, setPageBlocks] = useState<PageBlock[]>([]);
+  const [hasPageBuilder, setHasPageBuilder] = useState(false);
   const [ownerIsPro, setOwnerIsPro] = useState(false);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
