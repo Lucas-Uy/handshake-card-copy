@@ -390,7 +390,7 @@ export function BlockRenderer({ block, isEditing, onClick, persona }: BlockRende
           {editOverlay}
           {persona ? (
             <div className="flex justify-center" style={{ perspective: "1200px" }}>
-              <div className="scale-[0.85] origin-center">
+              <div className="scale-[0.95] origin-center">
                 <InteractiveCard3D
                   name={persona.display_name ?? "Your Name"}
                   headline={persona.headline ?? undefined}
