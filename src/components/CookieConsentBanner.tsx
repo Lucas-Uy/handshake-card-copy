@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Cookie, X, ChevronDown, ChevronUp } from "lucide-react";
@@ -11,6 +12,7 @@ export type CookiePrefs = {
   essential: true;
   analytics: boolean;
   functional: boolean;
+  declined?: boolean; // true when user chose "Decline All"
 };
 
 export function getCookiePrefs(): CookiePrefs {
@@ -19,9 +21,8 @@ export function getCookiePrefs(): CookiePrefs {
     if (!raw) return { essential: true, analytics: false, functional: false };
     const parsed = JSON.parse(raw);
     if (typeof parsed === "object" && parsed !== null && "essential" in parsed) {
-      return { essential: true, analytics: !!parsed.analytics, functional: !!parsed.functional };
+      return { essential: true, analytics: !!parsed.analytics, functional: !!parsed.functional, declined: !!parsed.declined };
     }
-    // Legacy: "all" or "essential"
     if (raw === "all") return { essential: true, analytics: true, functional: true };
     return { essential: true, analytics: false, functional: false };
   } catch {
@@ -34,22 +35,27 @@ export function saveCookiePrefs(prefs: CookiePrefs) {
 }
 
 export function CookieConsentBanner() {
+  const { user, loading } = useAuth();
   const [visible, setVisible] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [prefs, setPrefs] = useState<CookiePrefs>({ essential: true, analytics: false, functional: false });
 
   useEffect(() => {
+    // Only show after auth is resolved and user is logged in
+    if (loading || !user) return;
     const raw = localStorage.getItem(CONSENT_KEY);
     if (!raw) {
       const timer = setTimeout(() => setVisible(true), 1500);
       return () => clearTimeout(timer);
     }
-  }, []);
+  }, [user, loading]);
 
-  const accept = (mode: "all" | "essential" | "custom") => {
+  const accept = (mode: "all" | "essential" | "custom" | "decline") => {
     const final: CookiePrefs =
       mode === "all"
         ? { essential: true, analytics: true, functional: true }
+        : mode === "decline"
+        ? { essential: true, analytics: false, functional: false, declined: true }
         : mode === "essential"
         ? { essential: true, analytics: false, functional: false }
         : prefs;
@@ -81,7 +87,6 @@ export function CookieConsentBanner() {
                   </p>
                 </div>
 
-                {/* Expandable cookie categories */}
                 <button
                   onClick={() => setExpanded(!expanded)}
                   className="flex items-center gap-1 text-xs text-primary hover:underline"
@@ -142,12 +147,12 @@ export function CookieConsentBanner() {
                       Essential Only
                     </Button>
                   )}
-                  <Button size="sm" variant="ghost" onClick={() => accept("essential")} className="text-xs text-muted-foreground">
+                  <Button size="sm" variant="ghost" onClick={() => accept("decline")} className="text-xs text-muted-foreground">
                     Decline All
                   </Button>
                 </div>
               </div>
-              <button onClick={() => accept("essential")} className="text-muted-foreground hover:text-foreground shrink-0">
+              <button onClick={() => accept("decline")} className="text-muted-foreground hover:text-foreground shrink-0">
                 <X className="h-4 w-4" />
               </button>
             </div>
