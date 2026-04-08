@@ -34,7 +34,47 @@ const ICON_MAP: Record<string, any> = {
   HelpCircle, Grid3x3, ShoppingBag, CreditCard, Mail, Share2, Code,
 };
 
-function PageBuilderPage() {
+function SortableBlockItem({ block, Icon, meta, isActive, onSelect, onDuplicate }: {
+  block: PageBlock;
+  Icon: any;
+  meta: (typeof BLOCK_TYPES)[number] | undefined;
+  isActive: boolean;
+  onSelect: () => void;
+  onDuplicate: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: block.id });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 50 : undefined,
+  };
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      onClick={onSelect}
+      className={cn(
+        "flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs cursor-pointer transition-all",
+        isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted/50",
+        !block.is_visible && "opacity-40"
+      )}
+    >
+      <div {...attributes} {...listeners} className="touch-none">
+        <GripVertical className="w-3 h-3 cursor-grab shrink-0" />
+      </div>
+      <Icon className="w-3.5 h-3.5 shrink-0" />
+      <span className="truncate flex-1">{meta?.label ?? block.block_type}</span>
+      <div className="flex gap-0.5">
+        <button onClick={(e) => { e.stopPropagation(); onDuplicate(); }} className="p-0.5 hover:text-primary">
+          <Copy className="w-3 h-3" />
+        </button>
+        {!block.is_visible && <EyeOff className="w-3 h-3" />}
+      </div>
+    </div>
+  );
+}
+
   const { user } = useAuth();
   const { toast } = useToast();
   const isMobile = useIsMobile();
