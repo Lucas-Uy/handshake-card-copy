@@ -1,7 +1,65 @@
 import type { PageBlock } from "./types";
 import { Button } from "@/components/ui/button";
 import { Mail, Phone, Globe, Linkedin, Github, Twitter, Instagram, Facebook, Youtube, ExternalLink, MapPin, Quote as QuoteIcon, Star, ChevronDown, ChevronUp } from "lucide-react";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
+import { InteractiveCard3D } from "@/components/InteractiveCard3D";
+
+const ANIMATION_PRESETS: Record<string, { initial: any; animate: any; transition: any }> = {
+  none: { initial: {}, animate: {}, transition: {} },
+  "fade-up": {
+    initial: { opacity: 0, y: 30 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] },
+  },
+  "fade-down": {
+    initial: { opacity: 0, y: -30 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] },
+  },
+  "slide-left": {
+    initial: { opacity: 0, x: -40 },
+    animate: { opacity: 1, x: 0 },
+    transition: { duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] },
+  },
+  "slide-right": {
+    initial: { opacity: 0, x: 40 },
+    animate: { opacity: 1, x: 0 },
+    transition: { duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] },
+  },
+  "scale-spring": {
+    initial: { opacity: 0, scale: 0.85 },
+    animate: { opacity: 1, scale: 1 },
+    transition: { type: "spring", stiffness: 260, damping: 20 },
+  },
+  "scale-bounce": {
+    initial: { opacity: 0, scale: 0.6 },
+    animate: { opacity: 1, scale: 1 },
+    transition: { type: "spring", stiffness: 400, damping: 15 },
+  },
+  "blur-in": {
+    initial: { opacity: 0, filter: "blur(12px)" },
+    animate: { opacity: 1, filter: "blur(0px)" },
+    transition: { duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] },
+  },
+  "flip-up": {
+    initial: { opacity: 0, rotateX: -15, y: 20 },
+    animate: { opacity: 1, rotateX: 0, y: 0 },
+    transition: { type: "spring", stiffness: 200, damping: 18 },
+  },
+};
+
+export const ANIMATION_OPTIONS = Object.keys(ANIMATION_PRESETS);
+
+function useInView(ref: React.RefObject<HTMLElement | null>) {
+  const [inView, setInView] = useState(false);
+  useEffect(() => {
+    if (!ref.current) return;
+    const observer = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setInView(true); observer.disconnect(); } }, { threshold: 0.15 });
+    observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [ref]);
+  return inView;
+}
 
 interface BlockRendererProps {
   block: PageBlock;
@@ -12,6 +70,12 @@ interface BlockRendererProps {
 
 export function BlockRenderer({ block, isEditing, onClick, persona }: BlockRendererProps) {
   const { block_type, content, styles } = block;
+  const animRef = useRef<HTMLDivElement>(null);
+  const inView = useInView(animRef);
+  const animKey = (styles.animation as string) ?? "none";
+  const anim = ANIMATION_PRESETS[animKey] ?? ANIMATION_PRESETS.none;
+  const shouldAnimate = !isEditing && animKey !== "none";
+
   const wrapperStyle: React.CSSProperties = {
     paddingTop: styles.paddingY ?? 24,
     paddingBottom: styles.paddingY ?? 24,
@@ -22,6 +86,8 @@ export function BlockRenderer({ block, isEditing, onClick, persona }: BlockRende
     textAlign: (styles.alignment ?? "left") as any,
     maxWidth: styles.maxWidth ?? "100%",
     margin: "0 auto",
+    ...(shouldAnimate && !inView ? styleFromMotion(anim.initial) : {}),
+    ...(shouldAnimate && inView ? { ...styleFromMotion(anim.animate), transition: cssTransition(anim.transition) } : {}),
   };
 
   const editOverlay = isEditing ? (
