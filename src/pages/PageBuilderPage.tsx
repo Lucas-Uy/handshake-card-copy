@@ -16,6 +16,8 @@ import { BlockEditor } from "@/components/page-builder/BlockEditor";
 import { BLOCK_TYPES, type SitePage, type PageBlock, type BlockTypeId } from "@/components/page-builder/types";
 import { PAGE_TEMPLATES, type PageTemplate } from "@/components/page-builder/PageTemplates";
 import { cn } from "@/lib/utils";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -26,6 +28,7 @@ import {
   MousePointerClick, Quote, Users, BarChart3, MessageSquareQuote,
   HelpCircle, Grid3x3, ShoppingBag, CreditCard, Mail, Share2, Code,
   Home, PanelLeftClose, PanelLeft, FilePlus, Undo2, Redo2, BookTemplate,
+  CheckSquare, Square,
 } from "lucide-react";
 
 const ICON_MAP: Record<string, any> = {
