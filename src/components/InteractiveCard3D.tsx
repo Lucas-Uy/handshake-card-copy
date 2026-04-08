@@ -312,12 +312,13 @@ function CardFront({
       style={{
         ...FACE_STYLE,
         pointerEvents: isFlipped ? "none" : "auto",
-        ...getBackgroundStyle(cardBgImageUrl, cardBgSize, accentColor, secondaryColor, cardBgPosition),
+        ...(cardBgImageUrl ? { backgroundColor: `${accentColor}22` } : getGradientBackground(accentColor, secondaryColor)),
         boxShadow: `0 25px 50px -12px ${accentColor}44, 0 0 40px ${accentColor}22`,
         fontFamily,
       }}
       onClick={onFlip}
     >
+      {cardBgImageUrl && <BgImageLayer url={cardBgImageUrl} position={cardBgPosition} />}
       {/* Glass overlay */}
       <div
         className="absolute inset-0"
