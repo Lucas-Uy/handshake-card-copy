@@ -31,7 +31,7 @@ const ICON_MAP: Record<string, any> = {
   HelpCircle, Grid3x3, ShoppingBag, CreditCard, Mail, Share2, Code,
 };
 
-const PageBuilderPage = () => {
+function PageBuilderPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const isMobile = useIsMobile();
@@ -619,6 +619,6 @@ const PageBuilderPage = () => {
       </Sheet>
     </DashboardLayout>
   );
-};
+}
 
 export default PageBuilderPage;
