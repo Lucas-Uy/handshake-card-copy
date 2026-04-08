@@ -16,6 +16,9 @@ import { BlockEditor } from "@/components/page-builder/BlockEditor";
 import { BLOCK_TYPES, type SitePage, type PageBlock, type BlockTypeId } from "@/components/page-builder/types";
 import { PAGE_TEMPLATES, type PageTemplate } from "@/components/page-builder/PageTemplates";
 import { cn } from "@/lib/utils";
+import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
+import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import {
   Loader2, Plus, Save, Monitor, Smartphone, Eye, FileText,
   GripVertical, ChevronLeft, ChevronRight, Trash2, Copy, EyeOff,
@@ -30,6 +33,47 @@ const ICON_MAP: Record<string, any> = {
   MousePointerClick, Quote, Users, BarChart3, MessageSquareQuote,
   HelpCircle, Grid3x3, ShoppingBag, CreditCard, Mail, Share2, Code,
 };
+
+function SortableBlockItem({ block, Icon, meta, isActive, onSelect, onDuplicate }: {
+  block: PageBlock;
+  Icon: any;
+  meta: (typeof BLOCK_TYPES)[number] | undefined;
+  isActive: boolean;
+  onSelect: () => void;
+  onDuplicate: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: block.id });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 50 : undefined,
+  };
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      onClick={onSelect}
+      className={cn(
+        "flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs cursor-pointer transition-all",
+        isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted/50",
+        !block.is_visible && "opacity-40"
+      )}
+    >
+      <div {...attributes} {...listeners} className="touch-none">
+        <GripVertical className="w-3 h-3 cursor-grab shrink-0" />
+      </div>
+      <Icon className="w-3.5 h-3.5 shrink-0" />
+      <span className="truncate flex-1">{meta?.label ?? block.block_type}</span>
+      <div className="flex gap-0.5">
+        <button onClick={(e) => { e.stopPropagation(); onDuplicate(); }} className="p-0.5 hover:text-primary">
+          <Copy className="w-3 h-3" />
+        </button>
+        {!block.is_visible && <EyeOff className="w-3 h-3" />}
+      </div>
+    </div>
+  );
+}
 
 function PageBuilderPage() {
   const { user } = useAuth();
@@ -46,7 +90,6 @@ function PageBuilderPage() {
   const [deviceMode, setDeviceMode] = useState<"desktop" | "mobile">("mobile");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [addBlockOpen, setAddBlockOpen] = useState(false);
-  const [dragIdx, setDragIdx] = useState<number | null>(null);
   const [templateOpen, setTemplateOpen] = useState(false);
 
   // Undo/Redo history
@@ -266,18 +309,21 @@ function PageBuilderPage() {
     toast({ title: "All changes saved!" });
   };
 
-  const handleDragStart = (idx: number) => setDragIdx(idx);
-  const handleDragOver = (e: React.DragEvent, idx: number) => {
-    e.preventDefault();
-    if (dragIdx === null || dragIdx === idx) return;
-    const updated = [...blocks];
-    const [moved] = updated.splice(dragIdx, 1);
-    updated.splice(idx, 0, moved);
+  const pointerSensor = useSensor(PointerSensor, { activationConstraint: { distance: 5 } });
+  const touchSensor = useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } });
+  const sensors = useSensors(pointerSensor, touchSensor);
+
+  const handleSortEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIdx = blocks.findIndex(b => b.id === active.id);
+    const newIdx = blocks.findIndex(b => b.id === over.id);
+    if (oldIdx === -1 || newIdx === -1) return;
+    const updated = arrayMove([...blocks], oldIdx, newIdx);
     updated.forEach((b, i) => b.sort_order = i);
     setBlocks(updated);
-    setDragIdx(idx);
+    pushHistory(updated);
   };
-  const handleDragEnd = () => { setDragIdx(null); pushHistory(blocks); };
 
   const addFromTemplate = async (template: PageTemplate) => {
     if (!user || !selectedPersonaId) return;
@@ -423,37 +469,25 @@ function PageBuilderPage() {
               <ScrollArea className="flex-1">
                 <div className="p-2 space-y-1">
                   <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 px-2 py-1">Blocks</p>
-                  {blocks.map((block, idx) => {
-                    const meta = BLOCK_TYPES.find(b => b.id === block.block_type);
-                    const Icon = meta ? ICON_MAP[meta.icon] ?? FileText : FileText;
-                    return (
-                      <div
-                        key={block.id}
-                        draggable
-                        onDragStart={() => handleDragStart(idx)}
-                        onDragOver={(e) => handleDragOver(e, idx)}
-                        onDragEnd={handleDragEnd}
-                        onClick={() => setEditingBlockId(block.id)}
-                        className={cn(
-                          "flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs cursor-pointer transition-all",
-                          editingBlockId === block.id
-                            ? "bg-primary/10 text-primary"
-                            : "text-muted-foreground hover:bg-muted/50",
-                          !block.is_visible && "opacity-40"
-                        )}
-                      >
-                        <GripVertical className="w-3 h-3 cursor-grab shrink-0" />
-                        <Icon className="w-3.5 h-3.5 shrink-0" />
-                        <span className="truncate flex-1">{meta?.label ?? block.block_type}</span>
-                        <div className="flex gap-0.5">
-                          <button onClick={(e) => { e.stopPropagation(); duplicateBlock(block); }} className="p-0.5 hover:text-primary">
-                            <Copy className="w-3 h-3" />
-                          </button>
-                          {!block.is_visible && <EyeOff className="w-3 h-3" />}
-                        </div>
-                      </div>
-                    );
-                  })}
+                  <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleSortEnd}>
+                    <SortableContext items={blocks.map(b => b.id)} strategy={verticalListSortingStrategy}>
+                      {blocks.map((block) => {
+                        const meta = BLOCK_TYPES.find(b => b.id === block.block_type);
+                        const Icon = meta ? ICON_MAP[meta.icon] ?? FileText : FileText;
+                        return (
+                          <SortableBlockItem
+                            key={block.id}
+                            block={block}
+                            Icon={Icon}
+                            meta={meta}
+                            isActive={editingBlockId === block.id}
+                            onSelect={() => setEditingBlockId(block.id)}
+                            onDuplicate={() => duplicateBlock(block)}
+                          />
+                        );
+                      })}
+                    </SortableContext>
+                  </DndContext>
                 </div>
               </ScrollArea>
 
