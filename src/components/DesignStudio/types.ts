@@ -30,4 +30,5 @@ export interface PersonaDesign {
   border_radius: number | null;
   shadow_preset: string | null;
   card_animation: string | null;
+  avatar_position: { x: number; y: number; scale: number } | null;
 }
