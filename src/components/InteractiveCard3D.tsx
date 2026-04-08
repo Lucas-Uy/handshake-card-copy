@@ -253,20 +253,16 @@ export const InteractiveCard3D = forwardRef<HTMLDivElement, InteractiveCard3DPro
   );
 });
 
-function getBackgroundStyle(url: string | undefined, size: string, accentColor: string, secondaryColor: string) {
+function getBackgroundStyle(url: string | undefined, size: string, accentColor: string, secondaryColor: string, position?: { x: number; y: number; scale: number } | null) {
   if (!url) return { background: `linear-gradient(135deg, ${accentColor}dd, ${secondaryColor}88)` };
-  const sizeMap: Record<string, { backgroundSize: string; backgroundPosition: string }> = {
-    cover: { backgroundSize: "cover", backgroundPosition: "center" },
-    contain: { backgroundSize: "contain", backgroundPosition: "center" },
-    center: { backgroundSize: "auto", backgroundPosition: "center" },
-    original: { backgroundSize: "auto", backgroundPosition: "top left" },
-  };
-  const s = sizeMap[size] ?? sizeMap.cover;
+  const pos = position ?? { x: 50, y: 50, scale: 100 };
   return {
     backgroundImage: `url(${url})`,
     backgroundRepeat: "no-repeat" as const,
     backgroundColor: `${accentColor}22`,
-    ...s,
+    backgroundSize: "cover",
+    backgroundPosition: `${pos.x}% ${pos.y}%`,
+    transform: pos.scale !== 100 ? `scale(${pos.scale / 100})` : undefined,
   };
 }
 
@@ -276,6 +272,8 @@ function CardFront({
   textColor,
   cardBgImageUrl,
   cardBgSize = "cover",
+  avatarPosition,
+  cardBgPosition,
   glassOpacity,
   avatarUrl,
   glareBackground,
