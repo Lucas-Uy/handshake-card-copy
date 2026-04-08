@@ -75,6 +75,69 @@ function SortableBlockItem({ block, Icon, meta, isActive, onSelect, onDuplicate 
   );
 }
 
+function SortablePageTab({ page, isActive, onSelect }: {
+  page: SitePage;
+  isActive: boolean;
+  onSelect: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: page.id });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 50 : undefined,
+  };
+  return (
+    <button
+      ref={setNodeRef}
+      style={style}
+      onClick={onSelect}
+      className={cn(
+        "flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all border touch-none",
+        isActive
+          ? "bg-primary/10 text-primary border-primary/30"
+          : "text-muted-foreground border-border/40 hover:border-primary/20"
+      )}
+      {...attributes}
+      {...listeners}
+    >
+      {page.is_homepage && <Home className="w-3 h-3" />}
+      {page.title}
+    </button>
+  );
+}
+
+function SortablePreviewBlock({ block, editingBlockId, onSelect }: {
+  block: PageBlock;
+  editingBlockId: string | null;
+  onSelect: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: block.id });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 50 : undefined,
+    position: "relative",
+  };
+  return (
+    <div ref={setNodeRef} style={style} className="group relative">
+      <div
+        {...attributes}
+        {...listeners}
+        className="absolute left-1 top-1/2 -translate-y-1/2 z-10 opacity-0 group-hover:opacity-100 transition-opacity bg-card/80 backdrop-blur-sm rounded-lg p-1 cursor-grab touch-none"
+      >
+        <GripVertical className="w-4 h-4 text-muted-foreground" />
+      </div>
+      <BlockRenderer
+        block={block}
+        isEditing={true}
+        onClick={onSelect}
+      />
+    </div>
+  );
+}
+
 function PageBuilderPage() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -325,6 +388,20 @@ function PageBuilderPage() {
     pushHistory(updated);
   };
 
+  const handlePageSortEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIdx = pages.findIndex(p => p.id === active.id);
+    const newIdx = pages.findIndex(p => p.id === over.id);
+    if (oldIdx === -1 || newIdx === -1) return;
+    const updated = arrayMove([...pages], oldIdx, newIdx);
+    updated.forEach((p, i) => p.sort_order = i);
+    setPages(updated);
+    for (const p of updated) {
+      await supabase.from("site_pages").update({ sort_order: p.sort_order }).eq("id", p.id);
+    }
+  };
+
   const addFromTemplate = async (template: PageTemplate) => {
     if (!user || !selectedPersonaId) return;
     const { data: newPage } = await supabase.from("site_pages").insert({
@@ -421,21 +498,20 @@ function PageBuilderPage() {
 
         {/* Page Tabs */}
         <div className="flex items-center gap-2 overflow-x-auto pb-1">
-          {pages.map(page => (
-            <button
-              key={page.id}
-              onClick={() => setSelectedPageId(page.id)}
-              className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all border",
-                selectedPageId === page.id
-                  ? "bg-primary/10 text-primary border-primary/30"
-                  : "text-muted-foreground border-border/40 hover:border-primary/20"
-              )}
-            >
-              {page.is_homepage && <Home className="w-3 h-3" />}
-              {page.title}
-            </button>
-          ))}
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handlePageSortEnd}>
+            <SortableContext items={pages.map(p => p.id)} strategy={verticalListSortingStrategy}>
+              <div className="flex items-center gap-2">
+                {pages.map(page => (
+                  <SortablePageTab
+                    key={page.id}
+                    page={page}
+                    isActive={selectedPageId === page.id}
+                    onSelect={() => setSelectedPageId(page.id)}
+                  />
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
           <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={addPage}>
             <FilePlus className="w-3.5 h-3.5 mr-1" /> Add Page
           </Button>
@@ -521,14 +597,18 @@ function PageBuilderPage() {
                   )}
                 >
                   <div className="p-0">
-                    {blocks.filter(b => b.is_visible || editingBlockId === b.id).map(block => (
-                      <BlockRenderer
-                        key={block.id}
-                        block={block}
-                        isEditing={true}
-                        onClick={() => setEditingBlockId(block.id)}
-                      />
-                    ))}
+                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleSortEnd}>
+                      <SortableContext items={blocks.filter(b => b.is_visible || editingBlockId === b.id).map(b => b.id)} strategy={verticalListSortingStrategy}>
+                        {blocks.filter(b => b.is_visible || editingBlockId === b.id).map(block => (
+                          <SortablePreviewBlock
+                            key={block.id}
+                            block={block}
+                            editingBlockId={editingBlockId}
+                            onSelect={() => setEditingBlockId(block.id)}
+                          />
+                        ))}
+                      </SortableContext>
+                    </DndContext>
                     {blocks.length === 0 && (
                       <div className="flex flex-col items-center justify-center min-h-[300px] text-muted-foreground">
                         <Plus className="w-8 h-8 mb-2" />
