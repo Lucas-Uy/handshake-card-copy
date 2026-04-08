@@ -86,7 +86,24 @@ const CommerceDashboardPage = () => {
   const [orderItems, setOrderItems] = useState<OrderItemRow[]>([]);
   const [products, setProducts] = useState<{ id: string; name: string; stock: number; price: number; is_visible: boolean }[]>([]);
   const [interactions, setInteractions] = useState<InteractionRow[]>([]);
-  const [timeframe, setTimeframe] = useState<Timeframe>("30d");
+  const [kpiOrder, setKpiOrder] = useState<KPIKey[]>(() => {
+    try { const s = localStorage.getItem("commerce_kpi_order"); return s ? JSON.parse(s) : DEFAULT_KPI_ORDER; } catch { return DEFAULT_KPI_ORDER; }
+  });
+
+  const pointerSensor = useSensor(PointerSensor, { activationConstraint: { distance: 5 } });
+  const touchSensor = useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } });
+  const sensors = useSensors(pointerSensor, touchSensor);
+
+  const handleKpiSortEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIdx = kpiOrder.indexOf(active.id as KPIKey);
+    const newIdx = kpiOrder.indexOf(over.id as KPIKey);
+    if (oldIdx === -1 || newIdx === -1) return;
+    const updated = arrayMove(kpiOrder, oldIdx, newIdx);
+    setKpiOrder(updated);
+    localStorage.setItem("commerce_kpi_order", JSON.stringify(updated));
+  };
 
   useEffect(() => {
     if (!user) return;
