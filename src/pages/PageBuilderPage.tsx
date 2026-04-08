@@ -279,7 +279,35 @@ const PageBuilderPage = () => {
     setBlocks(updated);
     setDragIdx(idx);
   };
-  const handleDragEnd = () => setDragIdx(null);
+  const handleDragEnd = () => { setDragIdx(null); pushHistory(blocks); };
+
+  const addFromTemplate = async (template: PageTemplate) => {
+    if (!user || !selectedPersonaId) return;
+    const { data: newPage } = await supabase.from("site_pages").insert({
+      persona_id: selectedPersonaId,
+      user_id: user.id,
+      title: template.pageTitle,
+      slug: template.pageSlug,
+      sort_order: pages.length,
+      page_icon: template.icon,
+    }).select().single();
+    if (newPage) {
+      await supabase.from("page_blocks").insert(
+        template.blocks.map((b, i) => ({
+          page_id: newPage.id,
+          user_id: user!.id,
+          block_type: b.block_type,
+          content: b.content,
+          styles: b.styles,
+          sort_order: i,
+        }))
+      );
+      setPages([...pages, newPage as SitePage]);
+      setSelectedPageId(newPage.id);
+      setTemplateOpen(false);
+      toast({ title: `"${template.pageTitle}" page created!` });
+    }
+  };
 
   const editingBlock = blocks.find(b => b.id === editingBlockId) ?? null;
   const selectedPage = pages.find(p => p.id === selectedPageId);
