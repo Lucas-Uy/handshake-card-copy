@@ -18,6 +18,7 @@ import LeadsPage from "./pages/LeadsPage.tsx";
 import DesignStudioPage from "./pages/DesignStudioPage.tsx";
 import StorefrontEditorPage from "./pages/StorefrontEditorPage.tsx";
 import CommercePage from "./pages/CommercePage.tsx";
+import CommerceDashboardPage from "./pages/CommerceDashboardPage.tsx";
 import SettingsPage from "./pages/SettingsPage.tsx";
 import PublicProfilePage from "./pages/PublicProfilePage.tsx";
 import LoginPage from "./pages/LoginPage.tsx";
@@ -61,6 +62,7 @@ const App = () => (
             <Route path="/design-studio" element={<ProtectedRoute><DesignStudioPage /></ProtectedRoute>} />
             <Route path="/storefront" element={<ProtectedRoute><StorefrontEditorPage /></ProtectedRoute>} />
             <Route path="/commerce" element={<ProtectedRoute><CommercePage /></ProtectedRoute>} />
+            <Route path="/commerce-dashboard" element={<ProtectedRoute><CommerceDashboardPage /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
             <Route path="/plans" element={<ProtectedRoute><PlansPage /></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />

@@ -681,13 +681,16 @@ export type Database = {
         Returns: {
           accent_color: string
           availability_status: string
+          avatar_position: Json
           avatar_url: string
           background_image_url: string
           background_preset: string
+          bg_image_position: Json
           bio: string
           border_radius: number
           card_animation: string
           card_bg_image_url: string
+          card_bg_position: Json
           card_bg_size: string
           card_blur: number
           card_texture: string

@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Paintbrush, Cookie, FileText, Shield, Check, LogOut, Trash2,
-  KeyRound, Bell, UserX, User, Camera, Loader2, Save,
+  KeyRound, Bell, UserX, User, Camera, Loader2, Save, Crop,
 } from "lucide-react";
 import { DeleteAccountDialog } from "@/components/DeleteAccountDialog";
 import { useDashboardTheme, DASHBOARD_THEMES, type DashboardTheme } from "@/contexts/DashboardThemeContext";
@@ -19,6 +19,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { getCookiePrefs, saveCookiePrefs, type CookiePrefs } from "@/components/CookieConsentBanner";
+import { ImageCropperModal } from "@/components/DesignStudio/ImageCropperModal";
 
 const NOTIF_KEY = "notification_prefs";
 
@@ -33,6 +34,7 @@ const SettingsPage = () => {
   const [profileSaving, setProfileSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [showAvatarCropper, setShowAvatarCropper] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [profile, setProfile] = useState({
     display_name: "",
@@ -217,8 +219,31 @@ const SettingsPage = () => {
                     <p className="font-medium">{profile.display_name || "Unnamed"}</p>
                     <p className="text-sm text-muted-foreground">{user?.email}</p>
                     {profile.username && <p className="text-xs text-primary">/p/{profile.username}</p>}
+                    {avatarUrl && (
+                      <button
+                        type="button"
+                        onClick={() => setShowAvatarCropper(true)}
+                        className="text-[10px] text-muted-foreground hover:text-primary flex items-center gap-1 mt-1 transition-colors"
+                      >
+                        <Crop className="w-3 h-3" /> Adjust position
+                      </button>
+                    )}
                   </div>
                 </div>
+
+                {showAvatarCropper && avatarUrl && (
+                  <ImageCropperModal
+                    src={avatarUrl}
+                    cropAspectRatio={1}
+                    cropLabel="Profile Picture (circle crop)"
+                    initialPosition={{ x: 50, y: 50, scale: 100 }}
+                    onConfirm={() => {
+                      setShowAvatarCropper(false);
+                      toast({ title: "Avatar adjusted" });
+                    }}
+                    onCancel={() => setShowAvatarCropper(false)}
+                  />
+                )}
 
                 {/* Fields */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
