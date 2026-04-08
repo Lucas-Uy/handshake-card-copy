@@ -342,6 +342,30 @@ const PublicProfilePage = () => {
     }).catch(() => {});
   }, [merged.user_id, persona?.slug]);
 
+  const handlePageChange = useCallback(async (pageId: string) => {
+    setActivePageId(pageId);
+    const { data: blockData } = await supabase
+      .from("page_blocks")
+      .select("*")
+      .eq("page_id", pageId)
+      .eq("is_visible", true)
+      .order("sort_order");
+    setPageBlocks((blockData as PageBlock[]) ?? []);
+
+    // Track page navigation
+    const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+    const page = sitePages.find(p => p.id === pageId);
+    fetch(`https://${projectId}.supabase.co/functions/v1/log-interaction`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        target_user_id: merged.user_id,
+        interaction_type: "page_view",
+        metadata: { page_slug: page?.slug, page_title: page?.title, ua: navigator.userAgent, persona_slug: persona?.slug },
+      }),
+    }).catch(() => {});
+  }, [merged.user_id, persona?.slug, sitePages]);
+
   const handleDownloadCV = () => {
     if (!merged.cv_url) return;
     const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
