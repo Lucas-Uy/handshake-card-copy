@@ -49,7 +49,7 @@ function PageBuilderPage() {
   const [deviceMode, setDeviceMode] = useState<"desktop" | "mobile">("mobile");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [addBlockOpen, setAddBlockOpen] = useState(false);
-  const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const [templateOpen, setTemplateOpen] = useState(false);
   const [templateOpen, setTemplateOpen] = useState(false);
 
   // Undo/Redo history
@@ -269,18 +269,21 @@ function PageBuilderPage() {
     toast({ title: "All changes saved!" });
   };
 
-  const handleDragStart = (idx: number) => setDragIdx(idx);
-  const handleDragOver = (e: React.DragEvent, idx: number) => {
-    e.preventDefault();
-    if (dragIdx === null || dragIdx === idx) return;
-    const updated = [...blocks];
-    const [moved] = updated.splice(dragIdx, 1);
-    updated.splice(idx, 0, moved);
+  const pointerSensor = useSensor(PointerSensor, { activationConstraint: { distance: 5 } });
+  const touchSensor = useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } });
+  const sensors = useSensors(pointerSensor, touchSensor);
+
+  const handleSortEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIdx = blocks.findIndex(b => b.id === active.id);
+    const newIdx = blocks.findIndex(b => b.id === over.id);
+    if (oldIdx === -1 || newIdx === -1) return;
+    const updated = arrayMove([...blocks], oldIdx, newIdx);
     updated.forEach((b, i) => b.sort_order = i);
     setBlocks(updated);
-    setDragIdx(idx);
+    pushHistory(updated);
   };
-  const handleDragEnd = () => { setDragIdx(null); pushHistory(blocks); };
 
   const addFromTemplate = async (template: PageTemplate) => {
     if (!user || !selectedPersonaId) return;
