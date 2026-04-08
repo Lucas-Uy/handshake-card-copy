@@ -50,7 +50,6 @@ function PageBuilderPage() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [addBlockOpen, setAddBlockOpen] = useState(false);
   const [templateOpen, setTemplateOpen] = useState(false);
-  const [templateOpen, setTemplateOpen] = useState(false);
 
   // Undo/Redo history
   const historyRef = useRef<PageBlock[][]>([]);
