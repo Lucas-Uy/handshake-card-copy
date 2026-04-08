@@ -395,6 +395,9 @@ const PageBuilderPage = () => {
           <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={addPage}>
             <FilePlus className="w-3.5 h-3.5 mr-1" /> Add Page
           </Button>
+          <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => setTemplateOpen(true)}>
+            <BookTemplate className="w-3.5 h-3.5 mr-1" /> Templates
+          </Button>
         </div>
 
         {/* Main Layout */}
