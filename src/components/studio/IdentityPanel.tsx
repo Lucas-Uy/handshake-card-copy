@@ -11,8 +11,9 @@ import type { StudioPanelProps } from "./CardDesignPanel";
 import { FileText } from "lucide-react";
 
 export function IdentityPanel({ editing, update, isPro }: StudioPanelProps) {
-  const avatarPos = editing?.avatar_position
-    ? (typeof editing.avatar_position === "string" ? JSON.parse(editing.avatar_position) : editing.avatar_position)
+  const raw = editing?.avatar_position;
+  const avatarPos = raw
+    ? (typeof raw === "string" ? JSON.parse(raw as string) : raw)
     : DEFAULT_AVATAR_POSITION;
 
   const handleAvatarPosChange = (pos: { x: number; y: number; scale: number }) => {
