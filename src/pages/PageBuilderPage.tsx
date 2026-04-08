@@ -592,6 +592,31 @@ const PageBuilderPage = () => {
           </div>
         </SheetContent>
       </Sheet>
+
+      {/* Template Sheet */}
+      <Sheet open={templateOpen} onOpenChange={setTemplateOpen}>
+        <SheetContent side={isMobile ? "bottom" : "right"} className={cn(isMobile ? "h-[80vh] rounded-t-3xl" : "", "overflow-y-auto")}>
+          <div className="space-y-4 p-2">
+            <h3 className="text-sm font-semibold">Page Templates</h3>
+            <p className="text-xs text-muted-foreground">Start from a pre-built template — adds a new page with blocks already filled in.</p>
+            <div className="grid grid-cols-1 gap-3">
+              {PAGE_TEMPLATES.map(t => (
+                <button
+                  key={t.id}
+                  onClick={() => addFromTemplate(t)}
+                  className="flex items-center gap-3 p-4 rounded-xl border border-border/60 hover:border-primary/40 hover:bg-primary/5 transition-all text-left"
+                >
+                  <span className="text-2xl">{t.icon}</span>
+                  <div>
+                    <span className="text-sm font-medium block">{t.label}</span>
+                    <span className="text-xs text-muted-foreground">{t.description}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
     </DashboardLayout>
   );
 };
