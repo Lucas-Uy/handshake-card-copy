@@ -75,7 +75,8 @@ function SortableBlockItem({ block, Icon, meta, isActive, onSelect, onDuplicate 
   );
 }
 
-  function PageBuilderPage() {
+function PageBuilderPage() {
+  const { user } = useAuth();
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const [personas, setPersonas] = useState<{ id: string; label: string; slug: string }[]>([]);
