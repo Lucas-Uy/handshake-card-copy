@@ -550,6 +550,8 @@ function PageBuilderPage() {
                     isActive={selectedPageId === page.id}
                     onSelect={() => setSelectedPageId(page.id)}
                     onRename={(newTitle) => updatePageTitle(page.id, newTitle)}
+                    onDelete={() => deletePage(page.id)}
+                    canDelete={pages.length > 1}
                   />
                 ))}
               </div>
