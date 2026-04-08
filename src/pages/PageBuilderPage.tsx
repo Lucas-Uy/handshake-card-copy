@@ -595,6 +595,7 @@ function PageBuilderPage() {
                             isActive={editingBlockId === block.id}
                             onSelect={() => setEditingBlockId(block.id)}
                             onDuplicate={() => duplicateBlock(block)}
+                            onDelete={() => deleteBlock(block.id)}
                           />
                         );
                       })}
