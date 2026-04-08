@@ -66,8 +66,11 @@ function SortableBlockItem({ block, Icon, meta, isActive, onSelect, onDuplicate 
       <Icon className="w-3.5 h-3.5 shrink-0" />
       <span className="truncate flex-1">{meta?.label ?? block.block_type}</span>
       <div className="flex gap-0.5">
-        <button onClick={(e) => { e.stopPropagation(); onDuplicate(); }} className="p-0.5 hover:text-primary">
+        <button onClick={(e) => { e.stopPropagation(); onDuplicate(); }} className="p-0.5 hover:text-primary" title="Duplicate">
           <Copy className="w-3 h-3" />
+        </button>
+        <button onClick={(e) => { e.stopPropagation(); onDelete(); }} className="p-0.5 hover:text-destructive" title="Delete">
+          <Trash2 className="w-3 h-3" />
         </button>
         {!block.is_visible && <EyeOff className="w-3 h-3" />}
       </div>
