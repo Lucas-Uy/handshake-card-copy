@@ -47,6 +47,54 @@ const PageBuilderPage = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [addBlockOpen, setAddBlockOpen] = useState(false);
   const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const [templateOpen, setTemplateOpen] = useState(false);
+
+  // Undo/Redo history
+  const historyRef = useRef<PageBlock[][]>([]);
+  const historyIdxRef = useRef(-1);
+  const skipHistoryRef = useRef(false);
+
+  const pushHistory = useCallback((newBlocks: PageBlock[]) => {
+    if (skipHistoryRef.current) { skipHistoryRef.current = false; return; }
+    const idx = historyIdxRef.current;
+    historyRef.current = historyRef.current.slice(0, idx + 1);
+    historyRef.current.push(JSON.parse(JSON.stringify(newBlocks)));
+    historyIdxRef.current = historyRef.current.length - 1;
+    if (historyRef.current.length > 50) {
+      historyRef.current.shift();
+      historyIdxRef.current--;
+    }
+  }, []);
+
+  const undo = useCallback(() => {
+    if (historyIdxRef.current <= 0) return;
+    historyIdxRef.current--;
+    skipHistoryRef.current = true;
+    setBlocks(JSON.parse(JSON.stringify(historyRef.current[historyIdxRef.current])));
+  }, []);
+
+  const redo = useCallback(() => {
+    if (historyIdxRef.current >= historyRef.current.length - 1) return;
+    historyIdxRef.current++;
+    skipHistoryRef.current = true;
+    setBlocks(JSON.parse(JSON.stringify(historyRef.current[historyIdxRef.current])));
+  }, []);
+
+  // Keyboard shortcuts for undo/redo
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "z") {
+        e.preventDefault();
+        if (e.shiftKey) redo(); else undo();
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === "y") {
+        e.preventDefault();
+        redo();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [undo, redo]);
 
   // Load personas
   useEffect(() => {
