@@ -694,6 +694,17 @@ const PublicProfilePage = () => {
     <>
       {googleFontUrl && <link rel="stylesheet" href={googleFontUrl} />}
       <div ref={containerRef} className="relative" style={{ backgroundColor: landingBgColor, fontFamily: fontStack }}>
+        {/* Multi-page navigation */}
+        {hasPageBuilder && sitePages.length > 1 && activePageId && (
+          <PublicPageNav
+            pages={sitePages}
+            activePageId={activePageId}
+            onPageChange={handlePageChange}
+            accentColor={accentColor}
+            textColor={textColor}
+          />
+        )}
+
         {/* If Page Builder blocks exist, render those instead of legacy sections */}
         {hasPageBuilder ? (
           <div style={{ color: textColor }}>
