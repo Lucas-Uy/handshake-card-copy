@@ -79,11 +79,13 @@ function SortableBlockItem({ block, Icon, meta, isActive, onSelect, onDuplicate,
   );
 }
 
-function SortablePageTab({ page, isActive, onSelect, onRename }: {
+function SortablePageTab({ page, isActive, onSelect, onRename, onDelete, canDelete }: {
   page: SitePage;
   isActive: boolean;
   onSelect: () => void;
   onRename: (newTitle: string) => void;
+  onDelete: () => void;
+  canDelete: boolean;
 }) {
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(page.title);
@@ -110,7 +112,7 @@ function SortablePageTab({ page, isActive, onSelect, onRename }: {
       ref={setNodeRef}
       style={style}
       className={cn(
-        "flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all border",
+        "flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all border group/tab",
         isActive
           ? "bg-primary/10 text-primary border-primary/30"
           : "text-muted-foreground border-border/40 hover:border-primary/20"
@@ -136,6 +138,11 @@ function SortablePageTab({ page, isActive, onSelect, onRename }: {
         >
           {page.is_homepage && <Home className="w-3 h-3" />}
           {page.title}
+        </button>
+      )}
+      {canDelete && (
+        <button onClick={(e) => { e.stopPropagation(); onDelete(); }} className="opacity-0 group-hover/tab:opacity-100 transition-opacity hover:text-destructive" title="Delete page">
+          <Trash2 className="w-3 h-3" />
         </button>
       )}
     </div>
