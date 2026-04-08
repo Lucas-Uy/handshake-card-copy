@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { BlockRenderer } from "@/components/page-builder/BlockRenderer";
 import { BlockEditor } from "@/components/page-builder/BlockEditor";
 import { BLOCK_TYPES, type SitePage, type PageBlock, type BlockTypeId } from "@/components/page-builder/types";
+import { PAGE_TEMPLATES, type PageTemplate } from "@/components/page-builder/PageTemplates";
 import { cn } from "@/lib/utils";
 import {
   Loader2, Plus, Save, Monitor, Smartphone, Eye, FileText,
@@ -21,7 +22,7 @@ import {
   Type, AlignLeft, Image, LayoutGrid, Play, Minus, SeparatorHorizontal,
   MousePointerClick, Quote, Users, BarChart3, MessageSquareQuote,
   HelpCircle, Grid3x3, ShoppingBag, CreditCard, Mail, Share2, Code,
-  Home, PanelLeftClose, PanelLeft, FilePlus,
+  Home, PanelLeftClose, PanelLeft, FilePlus, Undo2, Redo2, BookTemplate,
 } from "lucide-react";
 
 const ICON_MAP: Record<string, any> = {
@@ -46,6 +47,54 @@ const PageBuilderPage = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [addBlockOpen, setAddBlockOpen] = useState(false);
   const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const [templateOpen, setTemplateOpen] = useState(false);
+
+  // Undo/Redo history
+  const historyRef = useRef<PageBlock[][]>([]);
+  const historyIdxRef = useRef(-1);
+  const skipHistoryRef = useRef(false);
+
+  const pushHistory = useCallback((newBlocks: PageBlock[]) => {
+    if (skipHistoryRef.current) { skipHistoryRef.current = false; return; }
+    const idx = historyIdxRef.current;
+    historyRef.current = historyRef.current.slice(0, idx + 1);
+    historyRef.current.push(JSON.parse(JSON.stringify(newBlocks)));
+    historyIdxRef.current = historyRef.current.length - 1;
+    if (historyRef.current.length > 50) {
+      historyRef.current.shift();
+      historyIdxRef.current--;
+    }
+  }, []);
+
+  const undo = useCallback(() => {
+    if (historyIdxRef.current <= 0) return;
+    historyIdxRef.current--;
+    skipHistoryRef.current = true;
+    setBlocks(JSON.parse(JSON.stringify(historyRef.current[historyIdxRef.current])));
+  }, []);
+
+  const redo = useCallback(() => {
+    if (historyIdxRef.current >= historyRef.current.length - 1) return;
+    historyIdxRef.current++;
+    skipHistoryRef.current = true;
+    setBlocks(JSON.parse(JSON.stringify(historyRef.current[historyIdxRef.current])));
+  }, []);
+
+  // Keyboard shortcuts for undo/redo
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "z") {
+        e.preventDefault();
+        if (e.shiftKey) redo(); else undo();
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === "y") {
+        e.preventDefault();
+        redo();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [undo, redo]);
 
   // Load personas
   useEffect(() => {
@@ -118,7 +167,10 @@ const PageBuilderPage = () => {
       .eq("page_id", selectedPageId!)
       .eq("user_id", user!.id)
       .order("sort_order");
-    setBlocks((data as PageBlock[]) ?? []);
+    const loaded = (data as PageBlock[]) ?? [];
+    setBlocks(loaded);
+    historyRef.current = [JSON.parse(JSON.stringify(loaded))];
+    historyIdxRef.current = 0;
   };
 
   const addPage = async () => {
@@ -163,19 +215,27 @@ const PageBuilderPage = () => {
     };
     const { data } = await supabase.from("page_blocks").insert(newBlock).select().single();
     if (data) {
-      setBlocks([...blocks, data as PageBlock]);
+      const newBlocks = [...blocks, data as PageBlock];
+      setBlocks(newBlocks);
+      pushHistory(newBlocks);
       setEditingBlockId(data.id);
       setAddBlockOpen(false);
     }
   };
 
   const updateBlock = (updated: PageBlock) => {
-    setBlocks(blocks.map(b => b.id === updated.id ? updated : b));
+    const newBlocks = blocks.map(b => b.id === updated.id ? updated : b);
+    setBlocks(newBlocks);
+    pushHistory(newBlocks);
   };
 
   const deleteBlock = async (id: string) => {
     await supabase.from("page_blocks").delete().eq("id", id);
-    setBlocks(blocks.filter(b => b.id !== id));
+    const newBlocks = blocks.filter(b => b.id !== id);
+    setBlocks(newBlocks);
+    pushHistory(newBlocks);
+    setEditingBlockId(null);
+  };
     setEditingBlockId(null);
   };
 
@@ -219,7 +279,35 @@ const PageBuilderPage = () => {
     setBlocks(updated);
     setDragIdx(idx);
   };
-  const handleDragEnd = () => setDragIdx(null);
+  const handleDragEnd = () => { setDragIdx(null); pushHistory(blocks); };
+
+  const addFromTemplate = async (template: PageTemplate) => {
+    if (!user || !selectedPersonaId) return;
+    const { data: newPage } = await supabase.from("site_pages").insert({
+      persona_id: selectedPersonaId,
+      user_id: user.id,
+      title: template.pageTitle,
+      slug: template.pageSlug,
+      sort_order: pages.length,
+      page_icon: template.icon,
+    }).select().single();
+    if (newPage) {
+      await supabase.from("page_blocks").insert(
+        template.blocks.map((b, i) => ({
+          page_id: newPage.id,
+          user_id: user!.id,
+          block_type: b.block_type,
+          content: b.content,
+          styles: b.styles,
+          sort_order: i,
+        }))
+      );
+      setPages([...pages, newPage as SitePage]);
+      setSelectedPageId(newPage.id);
+      setTemplateOpen(false);
+      toast({ title: `"${template.pageTitle}" page created!` });
+    }
+  };
 
   const editingBlock = blocks.find(b => b.id === editingBlockId) ?? null;
   const selectedPage = pages.find(p => p.id === selectedPageId);
@@ -264,6 +352,14 @@ const PageBuilderPage = () => {
             </Select>
           </div>
           <div className="flex items-center gap-2">
+            <div className="flex items-center gap-0.5">
+              <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={undo} title="Undo (Ctrl+Z)" disabled={historyIdxRef.current <= 0}>
+                <Undo2 className="w-3.5 h-3.5" />
+              </Button>
+              <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={redo} title="Redo (Ctrl+Shift+Z)" disabled={historyIdxRef.current >= historyRef.current.length - 1}>
+                <Redo2 className="w-3.5 h-3.5" />
+              </Button>
+            </div>
             <div className="hidden md:flex items-center gap-1 bg-muted/50 rounded-lg p-0.5">
               <Button size="sm" variant={deviceMode === "desktop" ? "default" : "ghost"} className="h-6 w-6 p-0" onClick={() => setDeviceMode("desktop")}>
                 <Monitor className="w-3 h-3" />
@@ -298,6 +394,9 @@ const PageBuilderPage = () => {
           ))}
           <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={addPage}>
             <FilePlus className="w-3.5 h-3.5 mr-1" /> Add Page
+          </Button>
+          <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => setTemplateOpen(true)}>
+            <BookTemplate className="w-3.5 h-3.5 mr-1" /> Templates
           </Button>
         </div>
 
@@ -489,6 +588,31 @@ const PageBuilderPage = () => {
                   </button>
                 );
               })}
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Template Sheet */}
+      <Sheet open={templateOpen} onOpenChange={setTemplateOpen}>
+        <SheetContent side={isMobile ? "bottom" : "right"} className={cn(isMobile ? "h-[80vh] rounded-t-3xl" : "", "overflow-y-auto")}>
+          <div className="space-y-4 p-2">
+            <h3 className="text-sm font-semibold">Page Templates</h3>
+            <p className="text-xs text-muted-foreground">Start from a pre-built template — adds a new page with blocks already filled in.</p>
+            <div className="grid grid-cols-1 gap-3">
+              {PAGE_TEMPLATES.map(t => (
+                <button
+                  key={t.id}
+                  onClick={() => addFromTemplate(t)}
+                  className="flex items-center gap-3 p-4 rounded-xl border border-border/60 hover:border-primary/40 hover:bg-primary/5 transition-all text-left"
+                >
+                  <span className="text-2xl">{t.icon}</span>
+                  <div>
+                    <span className="text-sm font-medium block">{t.label}</span>
+                    <span className="text-xs text-muted-foreground">{t.description}</span>
+                  </div>
+                </button>
+              ))}
             </div>
           </div>
         </SheetContent>

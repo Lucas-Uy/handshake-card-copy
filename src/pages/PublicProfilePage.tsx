@@ -7,6 +7,7 @@ import { SecurityGate } from "@/components/SecurityGate";
 import { CardDisabledPage } from "@/components/CardDisabledPage";
 import { PublicProductGrid } from "@/components/commerce/PublicProductGrid";
 import { BlockRenderer } from "@/components/page-builder/BlockRenderer";
+import { PublicPageNav } from "@/components/page-builder/PublicPageNav";
 import type { PageBlock } from "@/components/page-builder/types";
 import { downloadVCard } from "@/lib/vcard";
 import { getPresetCss } from "@/components/DesignStudio/BackgroundPresets";
@@ -93,6 +94,8 @@ const PublicProfilePage = () => {
   const [sections, setSections] = useState<SectionData[]>([]);
   const [pageBlocks, setPageBlocks] = useState<PageBlock[]>([]);
   const [hasPageBuilder, setHasPageBuilder] = useState(false);
+  const [sitePages, setSitePages] = useState<{ id: string; title: string; slug: string; is_homepage: boolean; page_icon: string | null }[]>([]);
+  const [activePageId, setActivePageId] = useState<string | null>(null);
   const [ownerIsPro, setOwnerIsPro] = useState(false);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -177,20 +180,24 @@ const PublicProfilePage = () => {
           ]);
         }
 
-        // Load page builder blocks
-        const { data: sitePages } = await supabase
+        // Load all site pages for this persona
+        const { data: allSitePages } = await supabase
           .from("site_pages")
-          .select("id")
+          .select("id, title, slug, is_homepage, page_icon")
           .eq("persona_id", personaData.id)
-          .eq("is_homepage", true)
           .eq("is_visible", true)
-          .limit(1);
+          .order("sort_order");
 
-        if (sitePages && sitePages.length > 0) {
+        if (allSitePages && allSitePages.length > 0) {
+          setSitePages(allSitePages);
+          const homepage = allSitePages.find(p => p.is_homepage) || allSitePages[0];
+          setActivePageId(homepage.id);
+
+          // Load blocks for homepage
           const { data: blockData } = await supabase
             .from("page_blocks")
             .select("*")
-            .eq("page_id", sitePages[0].id)
+            .eq("page_id", homepage.id)
             .eq("is_visible", true)
             .order("sort_order");
           if (blockData && blockData.length > 0) {
@@ -334,6 +341,30 @@ const PublicProfilePage = () => {
       }),
     }).catch(() => {});
   }, [merged.user_id, persona?.slug]);
+
+  const handlePageChange = useCallback(async (pageId: string) => {
+    setActivePageId(pageId);
+    const { data: blockData } = await supabase
+      .from("page_blocks")
+      .select("*")
+      .eq("page_id", pageId)
+      .eq("is_visible", true)
+      .order("sort_order");
+    setPageBlocks((blockData as PageBlock[]) ?? []);
+
+    // Track page navigation
+    const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+    const page = sitePages.find(p => p.id === pageId);
+    fetch(`https://${projectId}.supabase.co/functions/v1/log-interaction`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        target_user_id: merged.user_id,
+        interaction_type: "page_view",
+        metadata: { page_slug: page?.slug, page_title: page?.title, ua: navigator.userAgent, persona_slug: persona?.slug },
+      }),
+    }).catch(() => {});
+  }, [merged.user_id, persona?.slug, sitePages]);
 
   const handleDownloadCV = () => {
     if (!merged.cv_url) return;
@@ -663,6 +694,17 @@ const PublicProfilePage = () => {
     <>
       {googleFontUrl && <link rel="stylesheet" href={googleFontUrl} />}
       <div ref={containerRef} className="relative" style={{ backgroundColor: landingBgColor, fontFamily: fontStack }}>
+        {/* Multi-page navigation */}
+        {hasPageBuilder && sitePages.length > 1 && activePageId && (
+          <PublicPageNav
+            pages={sitePages}
+            activePageId={activePageId}
+            onPageChange={handlePageChange}
+            accentColor={accentColor}
+            textColor={textColor}
+          />
+        )}
+
         {/* If Page Builder blocks exist, render those instead of legacy sections */}
         {hasPageBuilder ? (
           <div style={{ color: textColor }}>
