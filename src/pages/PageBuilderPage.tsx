@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { BlockRenderer } from "@/components/page-builder/BlockRenderer";
 import { BlockEditor } from "@/components/page-builder/BlockEditor";
 import { BLOCK_TYPES, type SitePage, type PageBlock, type BlockTypeId } from "@/components/page-builder/types";
+import { PAGE_TEMPLATES, type PageTemplate } from "@/components/page-builder/PageTemplates";
 import { cn } from "@/lib/utils";
 import {
   Loader2, Plus, Save, Monitor, Smartphone, Eye, FileText,
