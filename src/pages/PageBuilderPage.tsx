@@ -850,6 +850,29 @@ function PageBuilderPage() {
           </div>
         </SheetContent>
       </Sheet>
+
+      {/* Confirmation Dialogs */}
+      <ConfirmDialog
+        open={!!confirmDeleteBlock}
+        onOpenChange={(open) => !open && setConfirmDeleteBlock(null)}
+        title="Delete Block?"
+        description="This block and its content will be permanently removed."
+        onConfirm={() => confirmDeleteBlock && deleteBlock(confirmDeleteBlock)}
+      />
+      <ConfirmDialog
+        open={!!confirmDeletePage}
+        onOpenChange={(open) => !open && setConfirmDeletePage(null)}
+        title="Delete Page?"
+        description="This page and all its blocks will be permanently removed."
+        onConfirm={() => confirmDeletePage && deletePage(confirmDeletePage)}
+      />
+      <ConfirmDialog
+        open={confirmBulkDelete}
+        onOpenChange={setConfirmBulkDelete}
+        title={`Delete ${selectedBlockIds.size} Block(s)?`}
+        description="All selected blocks will be permanently removed."
+        onConfirm={bulkDeleteBlocks}
+      />
     </DashboardLayout>
   );
 }
