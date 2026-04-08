@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { UpgradeOverlay } from "@/components/UpgradePrompt";
 import {
   Loader2, Download, ShoppingBag, DollarSign, TrendingUp,
-  Package, Clock, CheckCircle2, XCircle, BarChart3,
+  Package, Clock, CheckCircle2, XCircle, BarChart3, Wifi, ArrowRight,
 } from "lucide-react";
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip,
@@ -33,6 +33,7 @@ interface OrderRow {
   created_at: string;
   buyer_name: string;
   buyer_location: string;
+  persona_id: string;
 }
 
 interface OrderItemRow {
@@ -40,6 +41,12 @@ interface OrderItemRow {
   unit_price: number;
   variant_info: string | null;
   product_id: string;
+}
+
+interface InteractionRow {
+  interaction_type: string;
+  created_at: string;
+  metadata: Record<string, unknown> | null;
 }
 
 type Timeframe = "7d" | "30d" | "90d" | "all";
@@ -51,19 +58,22 @@ const CommerceDashboardPage = () => {
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [orderItems, setOrderItems] = useState<OrderItemRow[]>([]);
   const [products, setProducts] = useState<{ id: string; name: string; stock: number; price: number; is_visible: boolean }[]>([]);
+  const [interactions, setInteractions] = useState<InteractionRow[]>([]);
   const [timeframe, setTimeframe] = useState<Timeframe>("30d");
 
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      const [ordersRes, itemsRes, productsRes] = await Promise.all([
-        supabase.from("orders").select("id, total, status, payment_method, created_at, buyer_name, buyer_location").eq("seller_user_id", user.id).order("created_at", { ascending: false }),
+      const [ordersRes, itemsRes, productsRes, interactionsRes] = await Promise.all([
+        supabase.from("orders").select("id, total, status, payment_method, created_at, buyer_name, buyer_location, persona_id").eq("seller_user_id", user.id).order("created_at", { ascending: false }),
         supabase.from("order_items").select("quantity, unit_price, variant_info, product_id, order_id").order("order_id"),
         supabase.from("products").select("id, name, stock, price, is_visible").eq("user_id", user.id),
+        supabase.from("interaction_logs").select("interaction_type, created_at, metadata").eq("user_id", user.id),
       ]);
       setOrders((ordersRes.data ?? []) as OrderRow[]);
       setOrderItems((itemsRes.data ?? []) as OrderItemRow[]);
       setProducts(productsRes.data ?? []);
+      setInteractions((interactionsRes.data ?? []) as InteractionRow[]);
       setLoading(false);
     };
     load();
