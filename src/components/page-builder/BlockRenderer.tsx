@@ -104,8 +104,7 @@ export function BlockRenderer({ block, isEditing, onClick, persona }: BlockRende
   switch (block_type) {
     case "heading":
       return (
-        <div className="relative" style={wrapperStyle}>
-          {editOverlay}
+        <div ref={animRef} className="relative" style={wrapperStyle}>
           <h2
             className="font-display font-bold leading-tight"
             style={{
@@ -373,11 +372,39 @@ export function BlockRenderer({ block, isEditing, onClick, persona }: BlockRende
 
     case "nfc_card":
       return (
-        <div className="relative" style={wrapperStyle}>
+        <div ref={animRef} className="relative" style={wrapperStyle}>
           {editOverlay}
-          <div className="text-center p-8 rounded-xl bg-muted/20 border border-border/40">
-            <span className="text-sm text-muted-foreground">💳 3D NFC Card renders from your card settings</span>
-          </div>
+          {persona ? (
+            <div className="flex justify-center" style={{ perspective: "1200px" }}>
+              <div className="scale-[0.85] origin-center">
+                <InteractiveCard3D
+                  name={persona.display_name ?? "Your Name"}
+                  headline={persona.headline ?? undefined}
+                  avatarUrl={persona.avatar_url ?? undefined}
+                  username={persona.slug ?? ""}
+                  accentColor={persona.accent_color ?? "#0d9488"}
+                  secondaryColor={persona.secondary_color ?? undefined}
+                  tertiaryColor={persona.tertiary_color ?? undefined}
+                  textColor={persona.text_color ?? "#ffffff"}
+                  cardBgImageUrl={persona.card_bg_image_url ?? undefined}
+                  cardBgSize={persona.card_bg_size ?? "cover"}
+                  glassOpacity={persona.glass_opacity ?? 0.15}
+                  linkedinUrl={persona.linkedin_url ?? undefined}
+                  githubUrl={persona.github_url ?? undefined}
+                  website={persona.website ?? undefined}
+                  email={persona.email_public ?? undefined}
+                  fontFamily={persona.font_family ?? "Space Grotesk"}
+                  textAlignment={persona.text_alignment ?? "left"}
+                  cardBlur={persona.card_blur ?? 12}
+                  cardTexture={persona.card_texture ?? "none"}
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="text-center p-8 rounded-xl bg-muted/20 border border-border/40">
+              <span className="text-sm text-muted-foreground">💳 3D NFC Card — add persona data to render</span>
+            </div>
+          )}
         </div>
       );
 
@@ -452,4 +479,28 @@ function getSocialIcon(platform: string) {
     twitter: "𝕏", facebook: "f", instagram: "📸", youtube: "▶", linkedin: "in", github: "⌨", tiktok: "♪",
   };
   return map[platform.toLowerCase()] ?? "🔗";
+}
+
+function styleFromMotion(m: Record<string, any>): React.CSSProperties {
+  const s: any = {};
+  const transforms: string[] = [];
+  for (const [k, v] of Object.entries(m)) {
+    if (k === "opacity") s.opacity = v;
+    else if (k === "filter") s.filter = v;
+    else if (k === "x") transforms.push(`translateX(${v}px)`);
+    else if (k === "y") transforms.push(`translateY(${v}px)`);
+    else if (k === "scale") transforms.push(`scale(${v})`);
+    else if (k === "rotateX") transforms.push(`rotateX(${v}deg)`);
+  }
+  if (transforms.length) s.transform = transforms.join(" ");
+  return s;
+}
+
+function cssTransition(t: Record<string, any>): string {
+  if (t.type === "spring") {
+    const dur = 0.6;
+    return `all ${dur}s cubic-bezier(0.34, 1.56, 0.64, 1)`;
+  }
+  const dur = t.duration ?? 0.5;
+  return `all ${dur}s cubic-bezier(0.25, 0.46, 0.45, 0.94)`;
 }
