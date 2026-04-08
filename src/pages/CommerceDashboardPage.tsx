@@ -86,6 +86,7 @@ const CommerceDashboardPage = () => {
   const [orderItems, setOrderItems] = useState<OrderItemRow[]>([]);
   const [products, setProducts] = useState<{ id: string; name: string; stock: number; price: number; is_visible: boolean }[]>([]);
   const [interactions, setInteractions] = useState<InteractionRow[]>([]);
+  const [timeframe, setTimeframe] = useState<Timeframe>("30d");
   const [kpiOrder, setKpiOrder] = useState<KPIKey[]>(() => {
     try { const s = localStorage.getItem("commerce_kpi_order"); return s ? JSON.parse(s) : DEFAULT_KPI_ORDER; } catch { return DEFAULT_KPI_ORDER; }
   });
