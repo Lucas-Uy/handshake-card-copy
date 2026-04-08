@@ -595,7 +595,7 @@ function PageBuilderPage() {
                     isActive={selectedPageId === page.id}
                     onSelect={() => setSelectedPageId(page.id)}
                     onRename={(newTitle) => updatePageTitle(page.id, newTitle)}
-                    onDelete={() => deletePage(page.id)}
+                    onDelete={() => setConfirmDeletePage(page.id)}
                     canDelete={pages.length > 1}
                   />
                 ))}
@@ -624,9 +624,9 @@ function PageBuilderPage() {
                     className="h-7 text-xs font-semibold"
                   />
                   {pages.length > 1 && (
-                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive" onClick={() => selectedPage && deletePage(selectedPage.id)}>
-                      <Trash2 className="w-3 h-3" />
-                    </Button>
+                     <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive" onClick={() => selectedPage && setConfirmDeletePage(selectedPage.id)}>
+                       <Trash2 className="w-3 h-3" />
+                     </Button>
                   )}
                 </div>
               </div>
@@ -634,23 +634,53 @@ function PageBuilderPage() {
               {/* Block list */}
               <ScrollArea className="flex-1">
                 <div className="p-2 space-y-1">
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 px-2 py-1">Blocks</p>
+                  <div className="flex items-center justify-between px-2 py-1">
+                    <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Blocks</p>
+                    <div className="flex items-center gap-1">
+                      <Button variant="ghost" size="sm" className="h-5 px-1 text-[9px]" onClick={() => { setBulkMode(!bulkMode); setSelectedBlockIds(new Set()); }}>
+                        {bulkMode ? "Cancel" : "Select"}
+                      </Button>
+                      {bulkMode && selectedBlockIds.size > 0 && (
+                        <>
+                          <Button variant="ghost" size="sm" className="h-5 px-1 text-[9px]" onClick={() => bulkToggleVisibility(true)} title="Show selected">
+                            <Eye className="w-3 h-3" />
+                          </Button>
+                          <Button variant="ghost" size="sm" className="h-5 px-1 text-[9px]" onClick={() => bulkToggleVisibility(false)} title="Hide selected">
+                            <EyeOff className="w-3 h-3" />
+                          </Button>
+                          <Button variant="ghost" size="sm" className="h-5 px-1 text-[9px] text-destructive" onClick={() => setConfirmBulkDelete(true)} title="Delete selected">
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </div>
                   <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleSortEnd}>
                     <SortableContext items={blocks.map(b => b.id)} strategy={verticalListSortingStrategy}>
                       {blocks.map((block) => {
                         const meta = BLOCK_TYPES.find(b => b.id === block.block_type);
                         const Icon = meta ? ICON_MAP[meta.icon] ?? FileText : FileText;
                         return (
-                          <SortableBlockItem
-                            key={block.id}
-                            block={block}
-                            Icon={Icon}
-                            meta={meta}
-                            isActive={editingBlockId === block.id}
-                            onSelect={() => setEditingBlockId(block.id)}
-                            onDuplicate={() => duplicateBlock(block)}
-                            onDelete={() => deleteBlock(block.id)}
-                          />
+                          <div key={block.id} className="flex items-center gap-1">
+                            {bulkMode && (
+                              <Checkbox
+                                checked={selectedBlockIds.has(block.id)}
+                                onCheckedChange={() => toggleBulkSelect(block.id)}
+                                className="w-3.5 h-3.5"
+                              />
+                            )}
+                            <div className="flex-1">
+                              <SortableBlockItem
+                                block={block}
+                                Icon={Icon}
+                                meta={meta}
+                                isActive={editingBlockId === block.id}
+                                onSelect={() => bulkMode ? toggleBulkSelect(block.id) : setEditingBlockId(block.id)}
+                                onDuplicate={() => duplicateBlock(block)}
+                                onDelete={() => setConfirmDeleteBlock(block.id)}
+                              />
+                            </div>
+                          </div>
                         );
                       })}
                     </SortableContext>
