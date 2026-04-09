@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +12,8 @@ import type { PageBlock } from "@/components/page-builder/types";
 import { downloadVCard } from "@/lib/vcard";
 import { getPresetCss } from "@/components/DesignStudio/BackgroundPresets";
 import { getFontStack, getGoogleFontUrl } from "@/components/DesignStudio/FontPresets";
+import { PAGE_THEMES, getPageThemeStyles, PAGE_THEME_CLASS } from "@/contexts/PageBuilderThemeContext";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -100,6 +102,7 @@ const PublicProfilePage = () => {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [gateUnlocked, setGateUnlocked] = useState(false);
+  const [pageThemeId, setPageThemeId] = useState<string>("default");
   const containerRef = useRef<HTMLDivElement>(null);
 
   const { scrollYProgress } = useScroll({ target: containerRef });
@@ -152,6 +155,9 @@ const PublicProfilePage = () => {
       const personaData = Array.isArray(personaRows) ? personaRows[0] : personaRows;
       if (personaData) {
         setPersona(personaData as PersonaData);
+        // Load page theme from localStorage
+        const storedTheme = localStorage.getItem(`page_theme_${personaData.id}`);
+        if (storedTheme) setPageThemeId(storedTheme);
         // Also fetch gcash_qr_url directly (not in RPC)
         const { data: gcashData } = await supabase
           .from("personas")
@@ -393,6 +399,8 @@ const PublicProfilePage = () => {
       }),
     }).catch(() => {});
   }, [merged.user_id, persona?.slug]);
+
+  const pageThemeStyles = useMemo(() => getPageThemeStyles(pageThemeId), [pageThemeId]);
 
   if (loading) {
     return (
@@ -690,10 +698,21 @@ const PublicProfilePage = () => {
   // Find the NFC card section index for full-bleed rendering
   const nfcCardIdx = visibleSections.findIndex(s => s.section_type === "nfc_card");
 
+  const hasPageTheme = pageThemeId !== "default" && Object.keys(pageThemeStyles).length > 0;
+
   return (
     <>
       {googleFontUrl && <link rel="stylesheet" href={googleFontUrl} />}
-      <div ref={containerRef} className="relative" style={{ backgroundColor: landingBgColor, fontFamily: fontStack }}>
+      <div
+        ref={containerRef}
+        className={cn("relative", hasPageTheme && PAGE_THEME_CLASS)}
+        style={{
+          backgroundColor: hasPageTheme ? (pageThemeStyles as any)["--page-bg"] || landingBgColor : landingBgColor,
+          fontFamily: hasPageTheme ? (pageThemeStyles as any)["--page-font"] || fontStack : fontStack,
+          color: hasPageTheme ? (pageThemeStyles as any)["--page-text"] : undefined,
+          ...pageThemeStyles,
+        }}
+      >
         {/* Multi-page navigation */}
         {hasPageBuilder && sitePages.length > 1 && activePageId && (
           <PublicPageNav
