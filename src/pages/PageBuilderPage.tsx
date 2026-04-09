@@ -26,7 +26,7 @@ import {
   GripVertical, ChevronLeft, ChevronRight, Trash2, Copy, EyeOff,
   Type, AlignLeft, Image, LayoutGrid, Play, Minus, SeparatorHorizontal,
   MousePointerClick, Quote, Users, BarChart3, MessageSquareQuote,
-  HelpCircle, Grid3x3, ShoppingBag, CreditCard, Mail, Share2, Code,
+  HelpCircle, Grid3x3, ShoppingBag, ShoppingCart, CreditCard, Mail, Share2, Code,
   Home, PanelLeftClose, PanelLeft, FilePlus, Undo2, Redo2, BookTemplate,
   CheckSquare, Square, ArrowLeft, Wifi,
 } from "lucide-react";
