@@ -66,7 +66,7 @@ const Dashboard = () => {
   const { stats, chartData, timeframe, setTimeframe, loading } = useNfcData();
   const { isPro } = useSubscription();
   const [recentLogs, setRecentLogs] = useState<any[]>([]);
-  const [editMode, setEditMode] = useState(false);
+  
 
   const [engOrder, setEngOrder] = useState<EngagementCard[]>(() => loadArr(LS_ENG, DEFAULT_ENGAGEMENT));
   const [techOrder, setTechOrder] = useState<TechnicalCard[]>(() => loadArr(LS_TECH, DEFAULT_TECHNICAL));

@@ -43,7 +43,6 @@ const DEFAULT_NFC: NavItem[] = [
 const DEFAULT_COMMERCE: NavItem[] = [
   { title: "Commerce Dashboard", url: "/commerce-dashboard", icon: BarChart3 },
   { title: "Products", url: "/commerce", icon: ShoppingBag },
-  { title: "Orders", url: "/orders", icon: ClipboardList },
 ];
 
 const DEFAULT_GENERAL: NavItem[] = [
