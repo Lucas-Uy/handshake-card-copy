@@ -104,31 +104,44 @@ export function ProductVariantManager({ productId }: ProductVariantManagerProps)
       {Object.entries(grouped).map(([type, items]) => (
         <div key={type} className="space-y-2">
           <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">{type}</Label>
-          <div className="flex flex-wrap gap-1.5">
-            {items.map((v) => (
-              <Badge
-                key={v.id}
-                variant="secondary"
-                className="gap-1.5 pr-1 text-xs items-center"
-              >
-                {type === "Color" && COLOR_SWATCHES[v.variant_value] && (
-                  <span
-                    className="w-3 h-3 rounded-full border border-border/60 flex-shrink-0"
-                    style={{ backgroundColor: COLOR_SWATCHES[v.variant_value] }}
-                  />
-                )}
-                {v.variant_value}
-                {v.price_modifier !== 0 && (
-                  <span className="text-[9px] text-muted-foreground">
-                    {v.price_modifier > 0 ? "+" : ""}₱{v.price_modifier}
-                  </span>
-                )}
-                <span className="text-[9px] text-muted-foreground">({v.stock})</span>
-                <button onClick={() => removeVariant(v.id)} className="hover:text-destructive ml-0.5">
-                  <Trash2 className="w-2.5 h-2.5" />
-                </button>
-              </Badge>
-            ))}
+          <div className="space-y-1.5">
+            {items.map((v) => {
+              const isExpanded = expandedVariant === v.id;
+              return (
+                <div key={v.id} className="rounded-lg border border-border/40 bg-muted/10 overflow-hidden">
+                  <div className="flex items-center gap-1.5 px-2.5 py-1.5">
+                    {type === "Color" && COLOR_SWATCHES[v.variant_value] && (
+                      <span
+                        className="w-3 h-3 rounded-full border border-border/60 flex-shrink-0"
+                        style={{ backgroundColor: COLOR_SWATCHES[v.variant_value] }}
+                      />
+                    )}
+                    <span className="text-xs font-medium flex-1">{v.variant_value}</span>
+                    {v.price_modifier !== 0 && (
+                      <span className="text-[9px] text-muted-foreground">
+                        {v.price_modifier > 0 ? "+" : ""}₱{v.price_modifier}
+                      </span>
+                    )}
+                    <span className="text-[9px] text-muted-foreground">({v.stock})</span>
+                    <button
+                      onClick={() => setExpandedVariant(isExpanded ? null : v.id)}
+                      className="p-0.5 hover:bg-muted rounded transition-colors"
+                      title="Toggle images"
+                    >
+                      {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ImageIcon className="w-3 h-3 text-muted-foreground" />}
+                    </button>
+                    <button onClick={() => removeVariant(v.id)} className="p-0.5 hover:text-destructive transition-colors">
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  </div>
+                  {isExpanded && (
+                    <div className="px-2.5 pb-2.5">
+                      <VariantImageGallery variantId={v.id} />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       ))}
