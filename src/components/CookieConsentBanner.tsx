@@ -42,7 +42,7 @@ export function CookieConsentBanner() {
   const [prefs, setPrefs] = useState<CookiePrefs>({ essential: true, analytics: false, functional: false });
 
   // Public routes where the banner should never appear
-  const isPublicRoute = location.pathname.startsWith("/p/") || location.pathname.startsWith("/u/") || location.pathname === "/terms" || location.pathname === "/privacy";
+  const isPublicRoute = location.pathname.startsWith("/p/") || location.pathname.startsWith("/u/") || location.pathname === "/terms" || location.pathname === "/privacy" || location.pathname === "/page-builder";
 
   useEffect(() => {
     // Only show after auth is resolved, user is logged in, and not on public routes
