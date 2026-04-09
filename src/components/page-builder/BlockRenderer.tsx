@@ -1,9 +1,11 @@
 import type { PageBlock } from "./types";
 import { Button } from "@/components/ui/button";
-import { Mail, Phone, Globe, Linkedin, Github, Twitter, Instagram, Facebook, Youtube, ExternalLink, MapPin, Quote as QuoteIcon, Star, ChevronDown, ChevronUp } from "lucide-react";
+import { Mail, Phone, Globe, Linkedin, Github, Twitter, Instagram, Facebook, Youtube, ExternalLink, MapPin, Quote as QuoteIcon, Star, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { InteractiveCard3D } from "@/components/InteractiveCard3D";
 import { PublicProductGrid } from "@/components/commerce/PublicProductGrid";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const ANIMATION_PRESETS: Record<string, { initial: any; animate: any; transition: any }> = {
   none: { initial: {}, animate: {}, transition: {} },
@@ -82,7 +84,22 @@ export function BlockRenderer({ block, isEditing, onClick, persona }: BlockRende
     paddingBottom: styles.paddingY ?? 24,
     paddingLeft: styles.paddingX ?? 16,
     paddingRight: styles.paddingX ?? 16,
-    backgroundColor: styles.bgColor ?? "transparent",
+    backgroundColor: styles.bgTransparencyEnabled && styles.bgColor
+      ? (() => {
+          const opacity = (styles.bgOpacity ?? 100) / 100;
+          const c = styles.bgColor;
+          if (c.startsWith("rgba")) return c.replace(/[\d.]+\)$/, `${opacity})`);
+          if (c.startsWith("rgb")) return c.replace("rgb(", "rgba(").replace(")", `,${opacity})`);
+          if (c.startsWith("#")) {
+            const hex = c.slice(1);
+            const r = parseInt(hex.length === 3 ? hex[0]+hex[0] : hex.slice(0,2), 16);
+            const g = parseInt(hex.length === 3 ? hex[1]+hex[1] : hex.slice(2,4), 16);
+            const b = parseInt(hex.length === 3 ? hex[2]+hex[2] : hex.slice(4,6), 16);
+            return `rgba(${r},${g},${b},${opacity})`;
+          }
+          return c;
+        })()
+      : (styles.bgColor ?? "transparent"),
     borderRadius: styles.borderRadius ?? 0,
     textAlign: (styles.alignment ?? "left") as any,
     maxWidth: styles.maxWidth ?? "100%",
@@ -429,13 +446,7 @@ export function BlockRenderer({ block, isEditing, onClick, persona }: BlockRende
       return (
         <div ref={animRef} className="relative" style={wrapperStyle}>
           {editOverlay}
-          <div className="p-5 rounded-2xl bg-card/50 border border-border/60 space-y-3 backdrop-blur-sm">
-            <h3 className="font-semibold text-sm">{content.title || "Get in Touch"}</h3>
-            <input className="w-full bg-background/50 border border-border rounded-xl px-3 py-2 text-sm" placeholder="Your name" disabled={isEditing} />
-            <input className="w-full bg-background/50 border border-border rounded-xl px-3 py-2 text-sm" placeholder="Email" disabled={isEditing} />
-            <textarea className="w-full bg-background/50 border border-border rounded-xl px-3 py-2 text-sm min-h-[60px]" placeholder="Message" disabled={isEditing} />
-            <Button className="w-full rounded-xl" disabled={isEditing}>{content.buttonText || "Send"}</Button>
-          </div>
+          <ContactFormBlock content={content} isEditing={isEditing} persona={persona} />
         </div>
       );
 
@@ -520,4 +531,61 @@ function cssTransition(t: Record<string, any>): string {
   }
   const dur = t.duration ?? 0.5;
   return `all ${dur}s cubic-bezier(0.25, 0.46, 0.45, 0.94)`;
+}
+
+function ContactFormBlock({ content, isEditing, persona }: { content: Record<string, any>; isEditing?: boolean; persona?: any }) {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [company, setCompany] = useState("");
+  const [message, setMessage] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!email || !persona?.id || !persona?.user_id) return;
+    setSubmitting(true);
+    try {
+      const { error } = await supabase.from("lead_captures").insert({
+        owner_user_id: persona.user_id,
+        persona_id: persona.id,
+        visitor_name: name || null,
+        visitor_email: email,
+        visitor_phone: phone || null,
+        visitor_company: company || null,
+        visitor_message: message || null,
+      });
+      if (error) throw error;
+      setSubmitted(true);
+      toast.success("Message sent successfully!");
+    } catch {
+      toast.error("Failed to send. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (submitted) {
+    return (
+      <div className="p-5 rounded-2xl bg-card/50 border border-border/60 text-center space-y-2 backdrop-blur-sm">
+        <Mail className="w-8 h-8 mx-auto text-primary" />
+        <p className="font-semibold text-sm">Thank you!</p>
+        <p className="text-xs text-muted-foreground">Your message has been sent.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-5 rounded-2xl bg-card/50 border border-border/60 space-y-3 backdrop-blur-sm">
+      <h3 className="font-semibold text-sm">{content.title || "Get in Touch"}</h3>
+      <input className="w-full bg-background/50 border border-border rounded-xl px-3 py-2 text-sm" placeholder="Your name" value={name} onChange={e => setName(e.target.value)} disabled={isEditing} />
+      <input className="w-full bg-background/50 border border-border rounded-xl px-3 py-2 text-sm" placeholder="Email *" type="email" value={email} onChange={e => setEmail(e.target.value)} disabled={isEditing} required />
+      <input className="w-full bg-background/50 border border-border rounded-xl px-3 py-2 text-sm" placeholder="Phone" value={phone} onChange={e => setPhone(e.target.value)} disabled={isEditing} />
+      <input className="w-full bg-background/50 border border-border rounded-xl px-3 py-2 text-sm" placeholder="Company" value={company} onChange={e => setCompany(e.target.value)} disabled={isEditing} />
+      <textarea className="w-full bg-background/50 border border-border rounded-xl px-3 py-2 text-sm min-h-[60px]" placeholder="Message" value={message} onChange={e => setMessage(e.target.value)} disabled={isEditing} />
+      <Button className="w-full rounded-xl" disabled={isEditing || submitting || !email} onClick={handleSubmit}>
+        {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : (content.buttonText || "Send")}
+      </Button>
+    </div>
+  );
 }
