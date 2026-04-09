@@ -695,10 +695,22 @@ const PublicProfilePage = () => {
   // Find the NFC card section index for full-bleed rendering
   const nfcCardIdx = visibleSections.findIndex(s => s.section_type === "nfc_card");
 
+  const pageThemeStyles = useMemo(() => getPageThemeStyles(pageThemeId), [pageThemeId]);
+  const hasPageTheme = pageThemeId !== "default" && Object.keys(pageThemeStyles).length > 0;
+
   return (
     <>
       {googleFontUrl && <link rel="stylesheet" href={googleFontUrl} />}
-      <div ref={containerRef} className="relative" style={{ backgroundColor: landingBgColor, fontFamily: fontStack }}>
+      <div
+        ref={containerRef}
+        className={cn("relative", hasPageTheme && PAGE_THEME_CLASS)}
+        style={{
+          backgroundColor: hasPageTheme ? (pageThemeStyles as any)["--page-bg"] || landingBgColor : landingBgColor,
+          fontFamily: hasPageTheme ? (pageThemeStyles as any)["--page-font"] || fontStack : fontStack,
+          color: hasPageTheme ? (pageThemeStyles as any)["--page-text"] : undefined,
+          ...pageThemeStyles,
+        }}
+      >
         {/* Multi-page navigation */}
         {hasPageBuilder && sitePages.length > 1 && activePageId && (
           <PublicPageNav
