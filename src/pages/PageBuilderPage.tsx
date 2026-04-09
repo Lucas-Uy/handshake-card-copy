@@ -28,8 +28,13 @@ import {
   MousePointerClick, Quote, Users, BarChart3, MessageSquareQuote,
   HelpCircle, Grid3x3, ShoppingBag, ShoppingCart, CreditCard, Mail, Share2, Code,
   Home, PanelLeftClose, PanelLeft, FilePlus, Undo2, Redo2, BookTemplate,
-  CheckSquare, Square, ArrowLeft, Wifi,
+  CheckSquare, Square, ArrowLeft, Wifi, Paintbrush, Check,
 } from "lucide-react";
+import { PageBuilderThemeProvider, usePageBuilderTheme, PB_THEMES, type PBTheme } from "@/contexts/PageBuilderThemeContext";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 const ICON_MAP: Record<string, any> = {
   Type, AlignLeft, Image, LayoutGrid, Play, Minus, SeparatorHorizontal,
