@@ -224,6 +224,7 @@ export const InteractiveCard3D = forwardRef<HTMLDivElement, InteractiveCard3DPro
               textAlignment={textAlignment}
               cardBlur={cardBlur}
               cardTexture={cardTexture}
+              borderRadius={borderRadius}
             />
             <CardBack
               accentColor={accentColor}
@@ -311,12 +312,12 @@ function CardFront({
 
   return (
     <div
-      className="absolute inset-0 cursor-pointer overflow-hidden rounded-2xl border border-white/20"
+      className="absolute inset-0 cursor-pointer overflow-hidden border border-white/20"
       style={{
         ...FACE_STYLE,
+        borderRadius: `${borderRadius}px`,
         pointerEvents: isFlipped ? "none" : "auto",
         ...(cardBgImageUrl ? { backgroundColor: `${accentColor}22` } : getGradientBackground(accentColor, secondaryColor)),
-        boxShadow: `0 25px 50px -12px ${accentColor}44, 0 0 40px ${accentColor}22`,
         fontFamily,
       }}
       onClick={onFlip}
