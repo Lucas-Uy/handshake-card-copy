@@ -216,7 +216,6 @@ export function WidgetManager({ stats }: WidgetManagerProps) {
                   key={w.key} id={w.key} title={w.label}
                   value={getValue(w.key)} icon={w.icon}
                 />
-                />
               ))}
             </AnimatePresence>
           </div>
