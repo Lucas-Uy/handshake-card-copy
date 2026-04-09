@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -16,15 +15,6 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   Plus, Trash2, Check, Edit3, Shield, Lock, Users, Loader2, Eye,
 } from "lucide-react";
-
-const BACKGROUND_PRESETS = [
-  { id: "default", label: "Default", css: "none" },
-  { id: "carbon", label: "Carbon Fiber", css: "repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(255,255,255,0.02) 3px, rgba(255,255,255,0.02) 6px)" },
-  { id: "mesh", label: "Mesh Gradient", css: "radial-gradient(at 40% 20%, hsla(178,80%,40%,0.3) 0px, transparent 50%), radial-gradient(at 80% 60%, hsla(280,60%,50%,0.2) 0px, transparent 50%)" },
-  { id: "cyberpunk", label: "Cyberpunk Grid", css: "linear-gradient(rgba(0,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,255,0.03) 1px, transparent 1px)" },
-  { id: "marble", label: "Minimalist Marble", css: "linear-gradient(135deg, rgba(255,255,255,0.05) 25%, transparent 25%), linear-gradient(225deg, rgba(255,255,255,0.05) 25%, transparent 25%)" },
-  { id: "holo", label: "Holographic", css: "linear-gradient(135deg, rgba(255,0,128,0.15), rgba(0,255,255,0.15), rgba(128,0,255,0.15))" },
-];
 
 interface Persona {
   id: string;
