@@ -261,15 +261,6 @@ const Dashboard = () => {
             >
               <RotateCcw className="w-3 h-3" />
             </Button>
-            <Button
-              size="sm"
-              variant={editMode ? "default" : "outline"}
-              className={`h-7 text-[10px] sm:text-xs px-2 ${editMode ? "gradient-primary text-primary-foreground" : ""}`}
-              onClick={() => setEditMode(!editMode)}
-            >
-              <Settings2 className="w-3 h-3 mr-1" />
-              {editMode ? "Lock" : "Reorder"}
-            </Button>
           </div>
         </div>
 
