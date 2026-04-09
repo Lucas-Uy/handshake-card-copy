@@ -36,19 +36,23 @@ export function saveCookiePrefs(prefs: CookiePrefs) {
 
 export function CookieConsentBanner() {
   const { user, loading } = useAuth();
+  const location = useLocation();
   const [visible, setVisible] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [prefs, setPrefs] = useState<CookiePrefs>({ essential: true, analytics: false, functional: false });
 
+  // Public routes where the banner should never appear
+  const isPublicRoute = location.pathname.startsWith("/p/") || location.pathname.startsWith("/u/") || location.pathname === "/terms" || location.pathname === "/privacy";
+
   useEffect(() => {
-    // Only show after auth is resolved and user is logged in
-    if (loading || !user) return;
+    // Only show after auth is resolved, user is logged in, and not on public routes
+    if (loading || !user || isPublicRoute) return;
     const raw = localStorage.getItem(CONSENT_KEY);
     if (!raw) {
       const timer = setTimeout(() => setVisible(true), 1500);
       return () => clearTimeout(timer);
     }
-  }, [user, loading]);
+  }, [user, loading, isPublicRoute]);
 
   const accept = (mode: "all" | "essential" | "custom" | "decline") => {
     const final: CookiePrefs =
