@@ -1,6 +1,7 @@
 import { useState, useEffect, createContext, useContext } from "react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Input } from "@/components/ui/input";
 import { Palette } from "lucide-react";
 
 const PALETTES = [
@@ -13,9 +14,11 @@ const PALETTES = [
   { id: "monochrome", label: "Mono", colors: ["hsl(0, 0%, 40%)", "hsl(0, 0%, 55%)", "hsl(0, 0%, 70%)", "hsl(0, 0%, 30%)", "hsl(0, 0%, 85%)"] },
 ] as const;
 
-type PaletteId = (typeof PALETTES)[number]["id"];
+type PaletteId = (typeof PALETTES)[number]["id"] | "custom";
 
 const STORAGE_KEY = "nfc_chart_palette";
+const CUSTOM_COLORS_KEY = "nfc_chart_custom_colors";
+const DEFAULT_CUSTOM: string[] = ["#0d9488", "#3b82f6", "#8b5cf6", "#f59e0b", "#ef4444"];
 
 interface ChartPaletteContextValue {
   colors: string[];

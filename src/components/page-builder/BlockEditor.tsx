@@ -470,6 +470,34 @@ function renderContentEditor(block: PageBlock, updateContent: (k: string, v: any
         </div>
       );
 
+    case "nfc_card":
+      return (
+        <div className="space-y-3">
+          <div className="space-y-2">
+            <Label className="text-xs">Card Scale · {Math.round((c.cardScale ?? 0.95) * 100)}%</Label>
+            <Slider
+              value={[Math.round((c.cardScale ?? 0.95) * 100)]}
+              onValueChange={([v]) => updateContent("cardScale", v / 100)}
+              min={50} max={150} step={5}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-xs">Card Max Width</Label>
+            <Select value={String(c.cardMaxWidth ?? "420px")} onValueChange={(v) => updateContent("cardMaxWidth", v)}>
+              <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="320px">Small (320px)</SelectItem>
+                <SelectItem value="380px">Medium (380px)</SelectItem>
+                <SelectItem value="420px">Default (420px)</SelectItem>
+                <SelectItem value="480px">Large (480px)</SelectItem>
+                <SelectItem value="540px">X-Large (540px)</SelectItem>
+                <SelectItem value="100%">Full Width</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      );
+
     default:
       return <p className="text-xs text-muted-foreground">No editable properties for this block.</p>;
   }
