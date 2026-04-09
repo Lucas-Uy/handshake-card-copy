@@ -855,4 +855,38 @@ function PageBuilderPage() {
   );
 }
 
-export default PageBuilderPage;
+function PBThemeSwitcher() {
+  const { theme, setTheme } = usePageBuilderTheme();
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" title="Builder Theme">
+          <Paintbrush className="w-3.5 h-3.5" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-44 max-h-64 overflow-y-auto">
+        <DropdownMenuLabel className="text-[10px] uppercase tracking-wider text-muted-foreground">
+          Builder Theme
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {(Object.entries(PB_THEMES) as [PBTheme, { label: string; preview: string }][]).map(([key, cfg]) => (
+          <DropdownMenuItem key={key} onClick={() => setTheme(key)} className="flex items-center gap-2 cursor-pointer text-xs">
+            <span className="w-2.5 h-2.5 rounded-full shrink-0 border border-border" style={{ background: cfg.preview }} />
+            <span className="flex-1">{cfg.label}</span>
+            {theme === key && <Check className="w-3 h-3 text-primary shrink-0" />}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+function PageBuilderWithTheme() {
+  return (
+    <PageBuilderThemeProvider>
+      <PageBuilderPage />
+    </PageBuilderThemeProvider>
+  );
+}
+
+export default PageBuilderWithTheme;
