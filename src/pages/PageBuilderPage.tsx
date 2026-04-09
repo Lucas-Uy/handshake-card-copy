@@ -547,6 +547,7 @@ function PageBuilderPage() {
           <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={redo} title="Redo">
             <Redo2 className="w-3.5 h-3.5" />
           </Button>
+          <PBThemeSwitcher />
           <div className="w-px h-5 bg-border mx-1 hidden sm:block" />
           <div className="hidden sm:flex items-center gap-0.5 bg-muted/50 rounded-lg p-0.5">
             <Button size="sm" variant={deviceMode === "desktop" ? "default" : "ghost"} className="h-6 w-6 p-0" onClick={() => setDeviceMode("desktop")}>
