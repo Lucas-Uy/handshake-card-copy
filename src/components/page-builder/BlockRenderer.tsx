@@ -384,13 +384,15 @@ export function BlockRenderer({ block, isEditing, onClick, persona }: BlockRende
       );
     }
 
-    case "nfc_card":
+    case "nfc_card": {
+      const cardScale = content.cardScale ?? 0.95;
+      const cardMaxWidth = content.cardMaxWidth ?? "420px";
       return (
         <div ref={animRef} className="relative" style={wrapperStyle}>
           {editOverlay}
           {persona ? (
             <div className="flex justify-center" style={{ perspective: "1200px" }}>
-              <div className="scale-[0.95] origin-center">
+              <div style={{ transform: `scale(${cardScale})`, transformOrigin: "center", maxWidth: cardMaxWidth, width: "100%" }}>
                 <InteractiveCard3D
                   name={persona.display_name ?? "Your Name"}
                   headline={persona.headline ?? undefined}
@@ -421,6 +423,7 @@ export function BlockRenderer({ block, isEditing, onClick, persona }: BlockRende
           )}
         </div>
       );
+    }
 
     case "contact":
       return (

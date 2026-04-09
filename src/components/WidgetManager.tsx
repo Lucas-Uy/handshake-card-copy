@@ -105,7 +105,7 @@ function SortableWidget({ id, title, value, icon }: {
       <div {...attributes} {...listeners} className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab touch-none z-10">
         <GripVertical className="w-3 h-3 text-muted-foreground" />
       </div>
-      <StatCard title={title} value={value} icon={icon} />
+      <StatCard title={title} value={value} icon={icon} className="transition-shadow hover:shadow-lg hover:shadow-primary/10 hover:border-primary/20" />
     </motion.div>
   );
 }
