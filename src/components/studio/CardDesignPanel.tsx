@@ -18,22 +18,6 @@ const TEXT_ALIGNMENTS = [
 ];
 
 
-const SHADOW_PRESETS = [
-  { id: "none", label: "None", css: "none" },
-  { id: "subtle", label: "Subtle", css: "0 4px 12px -2px rgba(0,0,0,0.15)" },
-  { id: "medium", label: "Medium", css: "0 8px 24px -4px rgba(0,0,0,0.25)" },
-  { id: "strong", label: "Strong", css: "0 16px 48px -8px rgba(0,0,0,0.4)" },
-  { id: "glow", label: "Glow", css: "0 0 30px -5px var(--accent)" },
-  { id: "neon", label: "Neon", css: "0 0 20px 0 var(--accent), 0 0 40px 0 var(--accent)" },
-];
-
-const CARD_ANIMATIONS = [
-  { id: "tilt", label: "3D Tilt", desc: "Follows cursor", icon: MousePointer },
-  { id: "float", label: "Float", desc: "Gentle hover", icon: Sparkles },
-  { id: "flip", label: "Flip", desc: "Card flip on click", icon: RotateCcw },
-  { id: "pulse", label: "Pulse", desc: "Breathing glow", icon: Zap },
-  { id: "none", label: "Static", desc: "No animation", icon: Square },
-];
 
 export interface StudioPanelProps {
   editing: PersonaDesign | null;
