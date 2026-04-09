@@ -446,13 +446,7 @@ export function BlockRenderer({ block, isEditing, onClick, persona }: BlockRende
       return (
         <div ref={animRef} className="relative" style={wrapperStyle}>
           {editOverlay}
-          <div className="p-5 rounded-2xl bg-card/50 border border-border/60 space-y-3 backdrop-blur-sm">
-            <h3 className="font-semibold text-sm">{content.title || "Get in Touch"}</h3>
-            <input className="w-full bg-background/50 border border-border rounded-xl px-3 py-2 text-sm" placeholder="Your name" disabled={isEditing} />
-            <input className="w-full bg-background/50 border border-border rounded-xl px-3 py-2 text-sm" placeholder="Email" disabled={isEditing} />
-            <textarea className="w-full bg-background/50 border border-border rounded-xl px-3 py-2 text-sm min-h-[60px]" placeholder="Message" disabled={isEditing} />
-            <Button className="w-full rounded-xl" disabled={isEditing}>{content.buttonText || "Send"}</Button>
-          </div>
+          <ContactFormBlock content={content} isEditing={isEditing} persona={persona} />
         </div>
       );
 
