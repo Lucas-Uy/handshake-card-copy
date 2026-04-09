@@ -50,7 +50,7 @@ const PublicProductPage = () => {
   const [notFound, setNotFound] = useState(false);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
-  const [personaData, setPersonaData] = useState<{ accent_color: string; text_color: string; gcash_qr_url: string | null } | null>(null);
+  const [personaData, setPersonaData] = useState<{ accent_color: string; text_color: string; gcash_qr_url: string | null; page_theme: string } | null>(null);
 
   useEffect(() => {
     // Strip dashboard theme classes for clean public page
