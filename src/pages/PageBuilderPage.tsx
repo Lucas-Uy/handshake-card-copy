@@ -39,7 +39,7 @@ import {
 const ICON_MAP: Record<string, any> = {
   Type, AlignLeft, Image, LayoutGrid, Play, Minus, SeparatorHorizontal,
   MousePointerClick, Quote, Users, BarChart3, MessageSquareQuote,
-  HelpCircle, Grid3x3, ShoppingBag, CreditCard, Mail, Share2, Code,
+  HelpCircle, Grid3x3, CreditCard, Mail, Share2, Code,
 };
 
 function SortableBlockItem({ block, Icon, meta, isActive, onSelect, onDuplicate, onDelete }: {
