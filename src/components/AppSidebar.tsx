@@ -176,7 +176,7 @@ export function AppSidebar() {
               <span className="truncate">{user?.email ?? "Online"}</span>
             </div>
             <button
-              onClick={() => { localStorage.removeItem("sidebar_nfc_order"); localStorage.removeItem("sidebar_commerce_order"); localStorage.removeItem("sidebar_general_order"); window.location.reload(); }}
+              onClick={() => { localStorage.removeItem("sidebar_nfc_order"); localStorage.removeItem("sidebar_general_order"); window.location.reload(); }}
               title="Reset nav order"
               className="hover:text-primary transition-colors"
             >
