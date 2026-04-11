@@ -6,6 +6,7 @@ import { PersonaPieChart } from "@/components/PersonaPieChart";
 import { DeviceDonutChart } from "@/components/dashboard/DeviceDonutChart";
 import { ActivityHeatmap } from "@/components/dashboard/ActivityHeatmap";
 import { LinkCTRChart } from "@/components/dashboard/LinkCTRChart";
+import { CTAClickChart } from "@/components/dashboard/CTAClickChart";
 import { SecurityMetrics } from "@/components/dashboard/SecurityMetrics";
 import { ConnectionSourceChart } from "@/components/dashboard/ConnectionSourceChart";
 import { PersonaBarChart } from "@/components/dashboard/PersonaBarChart";
@@ -44,11 +45,11 @@ const TIMEFRAME_LABELS: Record<string, string> = {
 };
 
 /* ─── Chart card keys per tab ─── */
-type EngagementCard = "analytics" | "funnel" | "linkCTR" | "liveFeed";
+type EngagementCard = "analytics" | "funnel" | "linkCTR" | "ctaClicks" | "liveFeed";
 type TechnicalCard = "deviceType" | "browser" | "os" | "tapVelocity" | "heatmap" | "connections";
 type SecurityCard = "securityMetrics" | "handshake" | "leadGen";
 
-const DEFAULT_ENGAGEMENT: EngagementCard[] = ["analytics", "funnel", "linkCTR", "liveFeed"];
+const DEFAULT_ENGAGEMENT: EngagementCard[] = ["analytics", "funnel", "linkCTR", "ctaClicks", "liveFeed"];
 const DEFAULT_TECHNICAL: TechnicalCard[] = ["deviceType", "browser", "os", "tapVelocity", "heatmap", "connections"];
 const DEFAULT_SECURITY: SecurityCard[] = ["securityMetrics", "handshake", "leadGen"];
 
