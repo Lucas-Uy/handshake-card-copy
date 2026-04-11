@@ -69,9 +69,10 @@ interface BlockRendererProps {
   isEditing?: boolean;
   onClick?: () => void;
   persona?: any;
+  onTrackInteraction?: (type: string, metadata?: Record<string, any>) => void;
 }
 
-export function BlockRenderer({ block, isEditing, onClick, persona }: BlockRendererProps) {
+export function BlockRenderer({ block, isEditing, onClick, persona, onTrackInteraction }: BlockRendererProps) {
   const { block_type, content, styles } = block;
   const animRef = useRef<HTMLDivElement>(null);
   const inView = useInView(animRef);
