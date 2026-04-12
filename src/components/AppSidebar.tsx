@@ -3,6 +3,7 @@ import { CreditCard, LayoutDashboard, List, User, Wifi, LogOut, Tag, Smartphone,
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { useSubscription } from "@/hooks/useSubscription";
 import {
   DndContext, closestCenter, PointerSensor, TouchSensor,
   useSensor, useSensors, type DragEndEvent,
@@ -137,6 +138,15 @@ function SortableNavGroup({ label, storageKey, defaults, collapsed, sensors }: {
         </DndContext>
       </SidebarGroupContent>
     </SidebarGroup>
+  );
+}
+
+function SidebarBrandName() {
+  const { isPro } = useSubscription();
+  return (
+    <span className="font-display text-lg font-bold tracking-tight text-foreground">
+      {isPro ? "Handshake+" : "Handshake"}
+    </span>
   );
 }
 
