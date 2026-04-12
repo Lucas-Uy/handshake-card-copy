@@ -438,10 +438,51 @@ export function BlockRenderer({ block, isEditing, onClick, persona, onTrackInter
 
     case "social": {
       const links = content.links ?? [];
+      const showVcard = content.showVcard !== false;
+      const showCvDownload = content.showCvDownload ?? false;
       return (
         <div ref={animRef} className="relative" style={wrapperStyle}>
           {editOverlay}
           <div className="flex flex-wrap gap-3 justify-center">
+            {showVcard && persona && (
+              <button
+                className="w-12 h-12 rounded-xl bg-card/50 border border-border/60 flex items-center justify-center hover:border-primary/50 transition-colors"
+                title="Save Contact"
+                onClick={() => {
+                  if (!isEditing) {
+                    onTrackInteraction?.("vcard_download", { source: "social_block" });
+                    // Trigger vCard download
+                    const { downloadVCard } = require("@/lib/vcard");
+                    downloadVCard({
+                      displayName: persona.display_name ?? undefined,
+                      email: persona.email_public ?? undefined,
+                      phone: persona.phone ?? undefined,
+                      website: persona.website ?? undefined,
+                      linkedin: persona.linkedin_url ?? undefined,
+                      github: persona.github_url ?? undefined,
+                      headline: persona.headline ?? undefined,
+                      location: persona.location ?? undefined,
+                    });
+                  }
+                }}
+              >
+                <span className="text-sm">📇</span>
+              </button>
+            )}
+            {showCvDownload && persona?.cv_url && (
+              <a
+                href={persona.cv_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-12 h-12 rounded-xl bg-card/50 border border-border/60 flex items-center justify-center hover:border-primary/50 transition-colors"
+                title="Download CV"
+                onClick={() => {
+                  if (!isEditing) onTrackInteraction?.("cv_download", { source: "social_block" });
+                }}
+              >
+                <span className="text-sm">📄</span>
+              </a>
+            )}
             {links.length > 0 ? links.map((l: { platform: string; url: string }, i: number) => (
               <a key={i} href={l.url} target="_blank" rel="noopener noreferrer" className="w-12 h-12 rounded-xl bg-card/50 border border-border/60 flex items-center justify-center hover:border-primary/50 transition-colors" onClick={() => {
                 if (!isEditing) onTrackInteraction?.("link_click", { link_type: l.platform.toLowerCase() });
