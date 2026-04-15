@@ -432,7 +432,7 @@ function renderContentEditor(block: PageBlock, updateContent: (k: string, v: any
               </Button>
             </div>
           ))}
-          <Button variant="outline" size="sm" className="text-xs h-7" onClick={() => updateContent("items", [...(c.items ?? []), { icon: "✨", label: "New" }])}>
+          <Button variant="outline" size="sm" className="text-xs h-7" onClick={() => updateContent("items", [...(c.items ?? []), { icon: "✨", label: "New", description: "" }])}>
             <Plus className="w-3 h-3 mr-1" /> Add Item
           </Button>
         </div>
