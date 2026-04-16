@@ -309,11 +309,11 @@ export function BlockRenderer({ block, isEditing, onClick, persona, onTrackInter
       return (
         <div ref={animRef} className="relative" style={wrapperStyle}>
           {editOverlay}
-          <div className="flex items-center gap-4 p-4 rounded-2xl bg-card/50 border border-border/60 backdrop-blur-sm">
+          <div className="flex items-center gap-4 p-5 rounded-2xl bg-card/40 border border-white/10 backdrop-blur-xl shadow-lg">
             {content.photoUrl ? (
-              <img src={content.photoUrl} alt={content.name ?? ""} className="w-16 h-16 rounded-xl object-cover shrink-0" />
+              <img src={content.photoUrl} alt={content.name ?? ""} className="w-16 h-16 rounded-2xl object-cover shrink-0 ring-2 ring-white/10" />
             ) : (
-              <div className="w-16 h-16 rounded-xl bg-muted/50 shrink-0" />
+              <div className="w-16 h-16 rounded-2xl bg-white/5 shrink-0 ring-2 ring-white/10" />
             )}
             <div>
               <h3 className="font-semibold text-sm">{content.name || "Team Member"}</h3>
@@ -328,9 +328,9 @@ export function BlockRenderer({ block, isEditing, onClick, persona, onTrackInter
       return (
         <div ref={animRef} className="relative" style={wrapperStyle}>
           {editOverlay}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {(content.items ?? [{ value: "100+", label: "Customers" }, { value: "50K", label: "Sales" }, { value: "4.9", label: "Rating" }]).map((item: { value: string; label: string }, i: number) => (
-              <div key={i} className="text-center p-4 rounded-xl bg-card/50 border border-border/40">
+              <div key={i} className="text-center p-4 rounded-2xl bg-card/40 border border-white/10 backdrop-blur-xl shadow-lg hover:scale-[1.02] transition-transform">
                 <div className="text-2xl font-bold" style={{ color: styles.accentColor ?? "hsl(var(--primary))" }}>{item.value}</div>
                 <div className="text-xs text-muted-foreground mt-1">{item.label}</div>
               </div>
@@ -343,7 +343,7 @@ export function BlockRenderer({ block, isEditing, onClick, persona, onTrackInter
       return (
         <div ref={animRef} className="relative" style={wrapperStyle}>
           {editOverlay}
-          <div className="p-5 rounded-2xl bg-card/50 border border-border/60 backdrop-blur-sm">
+          <div className="p-5 rounded-2xl bg-card/40 border border-white/10 backdrop-blur-xl shadow-lg">
             <div className="flex gap-0.5 mb-3">
               {Array.from({ length: content.rating ?? 5 }).map((_, i) => (
                 <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
@@ -351,7 +351,7 @@ export function BlockRenderer({ block, isEditing, onClick, persona, onTrackInter
             </div>
             <p className="text-sm italic leading-relaxed">"{content.text || "Amazing experience!"}"</p>
             <div className="flex items-center gap-3 mt-4">
-              {content.avatarUrl && <img src={content.avatarUrl} alt="" className="w-8 h-8 rounded-full object-cover" />}
+              {content.avatarUrl && <img src={content.avatarUrl} alt="" className="w-8 h-8 rounded-full object-cover ring-2 ring-white/10" />}
               <div>
                 <p className="text-xs font-semibold">{content.name || "Customer"}</p>
                 {content.company && <p className="text-[10px] text-muted-foreground">{content.company}</p>}
@@ -378,12 +378,12 @@ export function BlockRenderer({ block, isEditing, onClick, persona, onTrackInter
       return (
         <div ref={animRef} className="relative" style={wrapperStyle}>
           {editOverlay}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-3 gap-3">
             {(content.items ?? [{ icon: "🚀", label: "Fast" }, { icon: "🔒", label: "Secure" }, { icon: "🎨", label: "Beautiful" }]).map((item: { icon: string; label: string; description?: string }, i: number) => (
-              <div key={i} className="text-center p-4 rounded-xl bg-card/30 border border-border/40">
+              <div key={i} className="text-center p-4 rounded-2xl bg-card/40 border border-white/10 backdrop-blur-xl shadow-lg hover:scale-[1.02] transition-transform">
                 <div className="text-2xl mb-2">{item.icon}</div>
                 <div className="text-xs font-semibold">{item.label}</div>
-                {item.description && <div className="text-[10px] text-muted-foreground mt-1">{item.description}</div>}
+                {item.description && <div className="text-[10px] text-muted-foreground mt-1 leading-relaxed">{item.description}</div>}
               </div>
             ))}
           </div>
