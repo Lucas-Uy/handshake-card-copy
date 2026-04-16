@@ -8,7 +8,7 @@ import { CardDisabledPage } from "@/components/CardDisabledPage";
 
 import { BlockRenderer } from "@/components/page-builder/BlockRenderer";
 import { PublicPageNav } from "@/components/page-builder/PublicPageNav";
-import { BentoProfileView } from "@/components/public/BentoProfileView";
+
 import type { PageBlock } from "@/components/page-builder/types";
 import { downloadVCard } from "@/lib/vcard";
 import { getPresetCss } from "@/components/DesignStudio/BackgroundPresets";
