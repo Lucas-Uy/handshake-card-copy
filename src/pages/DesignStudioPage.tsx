@@ -79,7 +79,7 @@ const DesignStudioPage = () => {
   };
 
   const presetCss = getPresetCss(editing?.background_preset);
-  const isPageBuilder = editing?.page_mode === "builder";
+  
 
   if (loading) {
     return (
