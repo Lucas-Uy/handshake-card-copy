@@ -56,13 +56,13 @@ const LeadsPage = () => {
     const wb = new ExcelJS.Workbook();
     wb.creator = "Handshake";
 
-    const headerFont: Partial<ExcelJS.Font> = { bold: true, size: 11, color: { argb: "FFFFFFFF" } };
-    const headerFill: ExcelJS.Fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF0D9488" } };
-    const borderThin: Partial<ExcelJS.Borders> = {
-      top: { style: "thin" }, bottom: { style: "thin" },
-      left: { style: "thin" }, right: { style: "thin" },
+    const headerFont = { bold: true, size: 11, color: { argb: "FFFFFFFF" } };
+    const headerFill = { type: "pattern" as const, pattern: "solid" as const, fgColor: { argb: "FF0D9488" } };
+    const borderThin = {
+      top: { style: "thin" as const }, bottom: { style: "thin" as const },
+      left: { style: "thin" as const }, right: { style: "thin" as const },
     };
-    const accentFill: ExcelJS.Fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF0FDFA" } };
+    const accentFill = { type: "pattern" as const, pattern: "solid" as const, fgColor: { argb: "FFF0FDFA" } };
 
     const ws = wb.addWorksheet("Leads");
     ws.mergeCells("A1:G1");
@@ -141,7 +141,7 @@ const LeadsPage = () => {
     [ws, wsSummary].forEach((sheet) => {
       sheet.columns?.forEach((col) => {
         let maxLen = 12;
-        (col as any).eachCell?.({ includeEmpty: false }, (cell: ExcelJS.Cell) => {
+        (col as any).eachCell?.({ includeEmpty: false }, (cell: any) => {
           const len = String(cell.value ?? "").length;
           if (len > maxLen) maxLen = len;
         });
