@@ -194,6 +194,7 @@ function PageBuilderPage() {
   const { toast } = useToast();
   const pageThemeCtx = usePageTheme();
   const isMobile = useIsMobile();
+  const { isPro, loading: subLoading } = useSubscription();
   const [personas, setPersonas] = useState<{ id: string; label: string; slug: string }[]>([]);
   const [selectedPersonaId, setSelectedPersonaId] = useState<string | null>(null);
   const [pages, setPages] = useState<SitePage[]>([]);
