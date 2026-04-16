@@ -299,6 +299,7 @@ export type Database = {
           landing_bg_color: string | null
           linkedin_url: string | null
           location: string | null
+          page_mode: string
           page_theme: string
           phone: string | null
           pin_code: string | null
@@ -347,6 +348,7 @@ export type Database = {
           landing_bg_color?: string | null
           linkedin_url?: string | null
           location?: string | null
+          page_mode?: string
           page_theme?: string
           phone?: string | null
           pin_code?: string | null
@@ -395,6 +397,7 @@ export type Database = {
           landing_bg_color?: string | null
           linkedin_url?: string | null
           location?: string | null
+          page_mode?: string
           page_theme?: string
           phone?: string | null
           pin_code?: string | null
