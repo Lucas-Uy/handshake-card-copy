@@ -11,8 +11,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { QRCodeSVG } from "qrcode.react";
 import {
-  Link2, Copy, Check, Download, Smartphone, ExternalLink, Info, Loader2,
+  Link2, Copy, Check, Download, Smartphone, ExternalLink, Info, Loader2, LayoutPanelLeft, User,
 } from "lucide-react";
+import { Label } from "@/components/ui/label";
 
 const NfcManagerPage = () => {
   const { user } = useAuth();
@@ -23,6 +24,8 @@ const NfcManagerPage = () => {
   const [copied, setCopied] = useState(false);
   const [shortened, setShortened] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
+  const [pageMode, setPageMode] = useState<string>("personal");
+  const [activePersonaId, setActivePersonaId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
