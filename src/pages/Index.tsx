@@ -282,8 +282,8 @@ const Dashboard = () => {
           <TabsContent value="engagement" className="space-y-3">
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={makeDragHandler(setEngOrder)}>
               <SortableContext items={engOrder} strategy={rectSortingStrategy}>
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-                  {engOrder.map(k => <div key={k}>{engCards[k]}</div>)}
+                <div className="flex flex-wrap gap-3">
+                  {engOrder.map(k => <div key={k} className="flex-1 min-w-[280px]">{engCards[k]}</div>)}
                 </div>
               </SortableContext>
             </DndContext>
@@ -309,8 +309,8 @@ const Dashboard = () => {
             {isPro ? (
               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={makeDragHandler(setTechOrder)}>
                 <SortableContext items={techOrder} strategy={rectSortingStrategy}>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    {techOrder.map(k => <div key={k} className={k === "tapVelocity" || k === "heatmap" || k === "connections" ? "" : ""}>{techCards[k]}</div>)}
+                  <div className="flex flex-wrap gap-3">
+                    {techOrder.map(k => <div key={k} className="flex-1 min-w-[280px]">{techCards[k]}</div>)}
                   </div>
                 </SortableContext>
               </DndContext>
