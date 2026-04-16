@@ -411,6 +411,8 @@ export function BlockRenderer({ block, isEditing, onClick, persona, onTrackInter
                   textColor={persona.text_color ?? "#ffffff"}
                   cardBgImageUrl={persona.card_bg_image_url ?? undefined}
                   cardBgSize={persona.card_bg_size ?? "cover"}
+                  avatarPosition={persona.avatar_position as any}
+                  cardBgPosition={persona.card_bg_position as any}
                   glassOpacity={persona.glass_opacity ?? 0.15}
                   linkedinUrl={persona.linkedin_url ?? undefined}
                   githubUrl={persona.github_url ?? undefined}
