@@ -708,8 +708,16 @@ const PublicProfilePage = () => {
           />
         )}
 
-        {/* If Page Builder blocks exist, render those instead of legacy sections */}
-        {hasPageBuilder ? (
+        {/* Route based on page_mode: personal = bento, builder = page blocks, default = legacy */}
+        {persona?.page_mode === 'personal' || (!hasPageBuilder && !persona?.page_mode) ? (
+          <BentoProfileView
+            merged={merged}
+            persona={persona ? { slug: persona.slug, avatar_position: persona.avatar_position, font_family: persona.font_family } : null}
+            textColor={textColor}
+            accentColor={accentColor}
+            fontStack={fontStack}
+          />
+        ) : hasPageBuilder ? (
           <div style={{
             color: hasPageTheme ? (pageThemeStyles as any)["--page-text"] || textColor : textColor,
             ...(hasPageTheme ? pageThemeStyles : {}),
