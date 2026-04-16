@@ -29,7 +29,7 @@ import {
   MousePointerClick, Quote, Users, BarChart3, MessageSquareQuote,
   HelpCircle, Grid3x3, CreditCard, Mail, Share2, Code,
   Home, PanelLeftClose, PanelLeft, FilePlus, Undo2, Redo2, BookTemplate,
-  CheckSquare, Square, ArrowLeft, Wifi, Paintbrush, Check,
+  CheckSquare, Square, ArrowLeft, Wifi, Paintbrush, Check, Crown,
 } from "lucide-react";
 import { PageThemeProvider, usePageTheme, PAGE_THEMES, getPageThemeStyles, PAGE_THEME_CLASS } from "@/contexts/PageBuilderThemeContext";
 import {
