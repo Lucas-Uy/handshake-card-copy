@@ -8,6 +8,7 @@ import { CardDisabledPage } from "@/components/CardDisabledPage";
 
 import { BlockRenderer } from "@/components/page-builder/BlockRenderer";
 import { PublicPageNav } from "@/components/page-builder/PublicPageNav";
+import { BentoProfileView } from "@/components/public/BentoProfileView";
 import type { PageBlock } from "@/components/page-builder/types";
 import { downloadVCard } from "@/lib/vcard";
 import { getPresetCss } from "@/components/DesignStudio/BackgroundPresets";
@@ -62,6 +63,7 @@ interface PersonaData {
   avatar_position?: { x: number; y: number; scale: number } | null;
   card_bg_position?: { x: number; y: number; scale: number } | null;
   bg_image_position?: { x: number; y: number; scale: number } | null;
+  page_mode?: string | null;
 }
 
 interface ProfileData {
@@ -706,8 +708,16 @@ const PublicProfilePage = () => {
           />
         )}
 
-        {/* If Page Builder blocks exist, render those instead of legacy sections */}
-        {hasPageBuilder ? (
+        {/* Route based on page_mode: personal = bento, builder = page blocks, default = legacy */}
+        {persona?.page_mode === 'personal' || (!hasPageBuilder && !persona?.page_mode) ? (
+          <BentoProfileView
+            merged={merged}
+            persona={persona ? { slug: persona.slug, avatar_position: persona.avatar_position, font_family: persona.font_family } : null}
+            textColor={textColor}
+            accentColor={accentColor}
+            fontStack={fontStack}
+          />
+        ) : hasPageBuilder ? (
           <div style={{
             color: hasPageTheme ? (pageThemeStyles as any)["--page-text"] || textColor : textColor,
             ...(hasPageTheme ? pageThemeStyles : {}),
