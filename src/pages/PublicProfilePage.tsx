@@ -4,6 +4,7 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { InteractiveCard3D } from "@/components/InteractiveCard3D";
 import { SecurityGate } from "@/components/SecurityGate";
+import { ContactMeModal } from "@/components/ContactMeModal";
 import { CardDisabledPage } from "@/components/CardDisabledPage";
 
 import { BlockRenderer } from "@/components/page-builder/BlockRenderer";
@@ -103,6 +104,8 @@ const PublicProfilePage = () => {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [gateUnlocked, setGateUnlocked] = useState(false);
+  const [contactModalOpen, setContactModalOpen] = useState(false);
+  const [scrolledPastHero, setScrolledPastHero] = useState(false);
   const [pageThemeId, setPageThemeId] = useState<string>("default");
   const containerRef = useRef<HTMLDivElement>(null);
 
