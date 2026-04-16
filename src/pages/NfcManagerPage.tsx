@@ -40,6 +40,18 @@ const NfcManagerPage = () => {
 
       setUsername(profile?.username ?? null);
 
+      // Get active persona for page_mode toggle
+      const { data: personaData } = await supabase
+        .from("personas")
+        .select("id, page_mode")
+        .eq("user_id", user.id)
+        .eq("is_active", true)
+        .limit(1)
+        .single();
+      if (personaData) {
+        setActivePersonaId(personaData.id);
+        setPageMode(personaData.page_mode ?? "personal");
+      }
       // Get or create short link
       const { data: existingLink } = await supabase
         .from("short_links")
