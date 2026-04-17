@@ -12,20 +12,31 @@ import { InteractiveCard3D } from "@/components/InteractiveCard3D";
 import { getPresetCss } from "@/components/DesignStudio/BackgroundPresets";
 import type { PersonaDesign } from "@/components/DesignStudio/types";
 import { CardDesignPanel } from "@/components/studio/CardDesignPanel";
+import { IdentityPanel } from "@/components/studio/IdentityPanel";
+import { LandingPagePanel } from "@/components/studio/LandingPagePanel";
 import {
-  Loader2, Save, Eye, CreditCard,
+  Loader2, Save, Eye, CreditCard, Palette, User, Image,
 } from "lucide-react";
+
+type StudioTab = "card" | "identity" | "landing";
+
+const TABS: { id: StudioTab; label: string; icon: typeof Palette }[] = [
+  { id: "card", label: "Card", icon: Palette },
+  { id: "identity", label: "Identity", icon: User },
+  { id: "landing", label: "Landing", icon: Image },
+];
 
 const DesignStudioPage = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { isPro } = useSubscription();
-  const [personas, setPersonas] = useState<PersonaDesign[]>([]);
+  const [personas, setPersonas] = useState<(PersonaDesign & { page_mode?: string })[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [editing, setEditing] = useState<PersonaDesign | null>(null);
+  const [editing, setEditing] = useState<(PersonaDesign & { page_mode?: string }) | null>(null);
   const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState<StudioTab>("card");
 
   useEffect(() => {
     if (!user) return;
@@ -34,7 +45,7 @@ const DesignStudioPage = () => {
         supabase.from("personas").select("*").eq("user_id", user.id).order("created_at"),
         supabase.from("profiles").select("username").eq("user_id", user.id).single(),
       ]);
-      const list = (personaData as unknown as PersonaDesign[]) ?? [];
+      const list = (personaData as unknown as (PersonaDesign & { page_mode?: string })[]) ?? [];
       setPersonas(list);
       setUsername(profile?.username ?? "");
       if (list.length > 0) { setSelectedId(list[0].id); setEditing({ ...list[0] }); }
@@ -48,7 +59,7 @@ const DesignStudioPage = () => {
     if (p) setEditing({ ...p });
   }, [selectedId]);
 
-  const update = (field: keyof PersonaDesign, value: unknown) => {
+  const update = (field: keyof PersonaDesign | "page_mode", value: unknown) => {
     if (!editing) return;
     setEditing({ ...editing, [field]: value });
   };
@@ -68,6 +79,7 @@ const DesignStudioPage = () => {
   };
 
   const presetCss = getPresetCss(editing?.background_preset);
+  
 
   if (loading) {
     return (
@@ -92,6 +104,126 @@ const DesignStudioPage = () => {
     );
   }
 
+  const cardPreview = (
+    <div
+      className="relative overflow-hidden rounded-2xl w-full"
+      style={{
+        backgroundColor: editing?.landing_bg_color ?? "hsl(var(--background))",
+        backgroundImage: editing?.background_image_url
+          ? `url(${editing.background_image_url})`
+          : presetCss !== "none" ? presetCss : undefined,
+        backgroundSize: editing?.background_image_url ? "cover" : undefined,
+        backgroundPosition: editing?.background_image_url ? "center" : undefined,
+        minHeight: "600px",
+      }}
+    >
+      {/* NFC Card Hero Section — full fly-up preview */}
+      <div className="relative flex flex-col items-center justify-center min-h-[480px] p-8">
+        <div className="pointer-events-none absolute inset-0" style={{ background: `radial-gradient(ellipse 60% 50% at 50% 50%, ${editing?.accent_color ?? "#0d9488"}15, transparent 70%)` }} />
+
+        {/* Branding */}
+        <div className="absolute top-4 flex items-center gap-2">
+          <div className="w-5 h-5 rounded-md flex items-center justify-center" style={{ background: editing?.accent_color ?? "#0d9488" }}>
+            <span className="text-white text-[8px] font-bold">H</span>
+          </div>
+          <span className="text-[9px] font-display font-semibold tracking-widest uppercase" style={{ color: `${editing?.text_color ?? "#fff"}99` }}>
+            Handshake
+          </span>
+        </div>
+
+        <div className="w-full max-w-xl">
+          <InteractiveCard3D
+            name={editing?.display_name ?? "Your Name"}
+            headline={editing?.headline ?? undefined}
+            avatarUrl={editing?.avatar_url ?? undefined}
+            username={username}
+            accentColor={editing?.accent_color ?? "#0d9488"}
+            secondaryColor={editing?.secondary_color ?? undefined}
+            tertiaryColor={editing?.tertiary_color ?? undefined}
+            textColor={editing?.text_color ?? "#ffffff"}
+            cardBgImageUrl={editing?.card_bg_image_url ?? undefined}
+            cardBgSize={editing?.card_bg_size ?? "cover"}
+            avatarPosition={editing?.avatar_position as any}
+            cardBgPosition={editing?.card_bg_position as any}
+            glassOpacity={editing?.glass_opacity ?? 0.15}
+            linkedinUrl={editing?.linkedin_url ?? undefined}
+            githubUrl={editing?.github_url ?? undefined}
+            website={editing?.website ?? undefined}
+            email={editing?.email_public ?? undefined}
+            fontFamily={editing?.font_family ?? "Space Grotesk"}
+            textAlignment={editing?.text_alignment ?? "left"}
+            cardBlur={editing?.card_blur ?? 12}
+            cardTexture={editing?.card_texture ?? "none"}
+            borderRadius={editing?.border_radius ?? 24}
+          />
+        </div>
+
+        {/* Scroll indicator */}
+        <div className="absolute bottom-4 flex flex-col items-center gap-1" style={{ color: `${editing?.text_color ?? "#fff"}66` }}>
+          <span className="text-[8px] font-medium uppercase tracking-widest">Scroll</span>
+          <span className="text-xs">▾</span>
+        </div>
+      </div>
+
+      {/* Info Section Preview */}
+      <div style={{ backgroundColor: editing?.landing_bg_color ?? "#0a0a0f" }} className="px-6 py-8 space-y-4">
+        {/* Hero info */}
+        {editing?.avatar_url && (
+          <div className="w-14 h-14 rounded-full mx-auto border-2 border-white/20 overflow-hidden">
+            <img src={editing.avatar_url} alt="" className="w-full h-full object-cover" />
+          </div>
+        )}
+        <div className="text-center space-y-1">
+          <h2 className="text-lg font-display font-bold" style={{ color: editing?.text_color ?? "#fff" }}>
+            {editing?.display_name || "Your Name"}
+          </h2>
+          {editing?.headline && (
+            <p className="text-xs" style={{ color: `${editing?.text_color ?? "#fff"}99` }}>{editing.headline}</p>
+          )}
+          {editing?.bio && (
+            <div className="mt-3 p-3 rounded-xl bg-white/5 backdrop-blur-md border border-white/10">
+              <p className="text-xs leading-relaxed" style={{ color: `${editing?.text_color ?? "#fff"}dd` }}>{editing.bio}</p>
+            </div>
+          )}
+        </div>
+
+        {/* Contact preview */}
+        <div className="rounded-xl divide-y divide-white/10 overflow-hidden bg-white/5 backdrop-blur-md border border-white/10">
+          {editing?.email_public && (
+            <div className="flex items-center gap-3 p-3 text-xs" style={{ color: editing?.text_color ?? "#fff" }}>
+              <span style={{ color: `${editing?.text_color ?? "#fff"}66` }}>✉</span>
+              {editing.email_public}
+            </div>
+          )}
+          {editing?.phone && (
+            <div className="flex items-center gap-3 p-3 text-xs" style={{ color: editing?.text_color ?? "#fff" }}>
+              <span style={{ color: `${editing?.text_color ?? "#fff"}66` }}>📞</span>
+              {editing.phone}
+            </div>
+          )}
+          {editing?.website && (
+            <div className="flex items-center gap-3 p-3 text-xs" style={{ color: editing?.text_color ?? "#fff" }}>
+              <span style={{ color: `${editing?.text_color ?? "#fff"}66` }}>🌐</span>
+              {editing.website}
+            </div>
+          )}
+        </div>
+
+        {/* Action buttons preview */}
+        <div className="space-y-2">
+          <div className="w-full h-10 rounded-xl flex items-center justify-center text-xs font-semibold text-white" style={{ backgroundColor: editing?.accent_color ?? "#0d9488" }}>
+            📇 Save Contact
+          </div>
+          {editing?.cv_url && (
+            <div className="w-full h-10 rounded-xl flex items-center justify-center text-xs border border-white/20" style={{ color: editing?.text_color ?? "#fff" }}>
+              📄 Download CV
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <DashboardLayout>
       <div className="space-y-4">
@@ -110,20 +242,54 @@ const DesignStudioPage = () => {
               </SelectContent>
             </Select>
           </div>
-          <Button onClick={handleSave} disabled={saving} size="sm" className="gradient-primary text-primary-foreground rounded-xl h-9">
-            {saving ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <Save className="w-3.5 h-3.5 mr-1.5" />}
-            Save
-          </Button>
+          <div className="flex items-center gap-4">
+            <Button onClick={handleSave} disabled={saving} size="sm" className="gradient-primary text-primary-foreground rounded-xl h-9">
+              {saving ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <Save className="w-3.5 h-3.5 mr-1.5" />}
+              Save
+            </Button>
+          </div>
         </div>
 
         {/* Main Layout: Panel + Preview */}
         <div className="flex flex-col lg:flex-row gap-0 rounded-2xl border border-border/60 bg-card/30 backdrop-blur-sm overflow-hidden" style={{ height: "calc(100vh - 180px)" }}>
-          {/* Panel Content — Card Design */}
-          <div className="flex-1 min-h-0 overflow-y-auto p-5 lg:max-w-md lg:border-r lg:border-border/40">
-            <CardDesignPanel editing={editing} update={update} isPro={isPro} />
+          {/* Panel with Tabs */}
+          <div className="flex-1 min-h-0 flex flex-col lg:max-w-md lg:border-r lg:border-border/40">
+            {/* Tab Switcher */}
+            <div className="flex border-b border-border/40 shrink-0">
+              {TABS.map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-medium transition-colors ${
+                      activeTab === tab.id
+                        ? "text-primary border-b-2 border-primary"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <Icon className="w-3.5 h-3.5" />
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Tab Content */}
+            <div className="flex-1 min-h-0 overflow-y-auto p-5">
+              {activeTab === "card" && (
+                <CardDesignPanel editing={editing} update={update} isPro={isPro} />
+              )}
+              {activeTab === "identity" && (
+                <IdentityPanel editing={editing} update={update} isPro={isPro} />
+              )}
+              {activeTab === "landing" && (
+                <LandingPagePanel editing={editing} update={update} isPro={isPro} />
+              )}
+            </div>
           </div>
 
-          {/* Live Preview — Desktop: just the card, scaled up */}
+          {/* Live Preview — Desktop */}
           <div className="flex-1 hidden lg:flex flex-col overflow-y-auto bg-background/50">
             <div className="flex items-center justify-between px-4 py-3 border-b border-border/40">
               <div className="flex items-center gap-2">
@@ -131,47 +297,8 @@ const DesignStudioPage = () => {
                 <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Preview</span>
               </div>
             </div>
-
             <div className="flex-1 flex items-center justify-center p-4">
-              <div
-                className="relative overflow-hidden rounded-2xl w-full"
-                style={{
-                  backgroundColor: editing?.landing_bg_color ?? "hsl(var(--background))",
-                  backgroundImage: editing?.background_image_url
-                    ? `url(${editing.background_image_url})`
-                    : presetCss !== "none" ? presetCss : undefined,
-                  backgroundSize: editing?.background_image_url ? "cover" : undefined,
-                  backgroundPosition: editing?.background_image_url ? "center" : undefined,
-                }}
-              >
-                <div className="relative flex flex-col items-center justify-center min-h-[480px] p-8">
-                  <div className="pointer-events-none absolute inset-0" style={{ background: `radial-gradient(ellipse 60% 50% at 50% 40%, ${editing?.accent_color ?? "#0d9488"}25, transparent 70%)` }} />
-                  <div className="w-full max-w-xl">
-                    <InteractiveCard3D
-                      name={editing?.display_name ?? "Your Name"}
-                      headline={editing?.headline ?? undefined}
-                      avatarUrl={editing?.avatar_url ?? undefined}
-                      username={username}
-                      accentColor={editing?.accent_color ?? "#0d9488"}
-                      secondaryColor={editing?.secondary_color ?? undefined}
-                      tertiaryColor={editing?.tertiary_color ?? undefined}
-                      textColor={editing?.text_color ?? "#ffffff"}
-                      cardBgImageUrl={editing?.card_bg_image_url ?? undefined}
-                      cardBgSize={editing?.card_bg_size ?? "cover"}
-                      glassOpacity={editing?.glass_opacity ?? 0.15}
-                      linkedinUrl={editing?.linkedin_url ?? undefined}
-                      githubUrl={editing?.github_url ?? undefined}
-                      website={editing?.website ?? undefined}
-                      email={editing?.email_public ?? undefined}
-                      fontFamily={editing?.font_family ?? "Space Grotesk"}
-                      textAlignment={editing?.text_alignment ?? "left"}
-                      cardBlur={editing?.card_blur ?? 12}
-                      cardTexture={editing?.card_texture ?? "none"}
-                      borderRadius={editing?.border_radius ?? 24}
-                    />
-                  </div>
-                </div>
-              </div>
+              {cardPreview}
             </div>
           </div>
 
@@ -191,44 +318,8 @@ const DesignStudioPage = () => {
                   </div>
                 </div>
                 <div className="flex items-center justify-center p-4">
-                  <div
-                    className="relative overflow-hidden rounded-2xl w-full max-w-sm"
-                    style={{
-                      backgroundColor: editing?.landing_bg_color ?? "hsl(var(--background))",
-                      backgroundImage: editing?.background_image_url
-                        ? `url(${editing.background_image_url})`
-                        : presetCss !== "none" ? presetCss : undefined,
-                      backgroundSize: editing?.background_image_url ? "cover" : undefined,
-                      backgroundPosition: editing?.background_image_url ? "center" : undefined,
-                    }}
-                  >
-                    <div className="relative flex flex-col items-center justify-center min-h-[350px] p-6">
-                      <div className="pointer-events-none absolute inset-0" style={{ background: `radial-gradient(ellipse 60% 50% at 50% 40%, ${editing?.accent_color ?? "#0d9488"}25, transparent 70%)` }} />
-                      <div className="scale-[0.95] origin-center">
-                        <InteractiveCard3D
-                          name={editing?.display_name ?? "Your Name"}
-                          headline={editing?.headline ?? undefined}
-                          avatarUrl={editing?.avatar_url ?? undefined}
-                          username={username}
-                          accentColor={editing?.accent_color ?? "#0d9488"}
-                          secondaryColor={editing?.secondary_color ?? undefined}
-                          tertiaryColor={editing?.tertiary_color ?? undefined}
-                          textColor={editing?.text_color ?? "#ffffff"}
-                          cardBgImageUrl={editing?.card_bg_image_url ?? undefined}
-                          cardBgSize={editing?.card_bg_size ?? "cover"}
-                          glassOpacity={editing?.glass_opacity ?? 0.15}
-                          linkedinUrl={editing?.linkedin_url ?? undefined}
-                          githubUrl={editing?.github_url ?? undefined}
-                          website={editing?.website ?? undefined}
-                          email={editing?.email_public ?? undefined}
-                          fontFamily={editing?.font_family ?? "Space Grotesk"}
-                          textAlignment={editing?.text_alignment ?? "left"}
-                          cardBlur={editing?.card_blur ?? 12}
-                          cardTexture={editing?.card_texture ?? "none"}
-                          borderRadius={editing?.border_radius ?? 24}
-                        />
-                      </div>
-                    </div>
+                  <div className="scale-[0.95] origin-center w-full max-w-sm">
+                    {cardPreview}
                   </div>
                 </div>
               </SheetContent>

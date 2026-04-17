@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { CreditCard, LayoutDashboard, List, User, Wifi, LogOut, Tag, Smartphone, Users, Mail, Palette, Settings, Crown, ShieldCheck, FileText, GripVertical, RotateCcw } from "lucide-react";
+import { CreditCard, LayoutDashboard, List, User, Wifi, LogOut, Tag, Smartphone, Users, Mail, Palette, Settings, Crown, ShieldCheck, FileText, GripVertical, RotateCcw, Contact } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
@@ -51,7 +51,7 @@ const DEFAULT_GENERAL: NavItem[] = [
 
 const ICON_MAP: Record<string, any> = {
   LayoutDashboard, CreditCard, Smartphone, Palette, FileText, List, Tag,
-  Users, Mail, Settings, Crown, ShieldCheck,
+  Users, Mail, Settings, Crown, ShieldCheck, Contact,
 };
 
 function reorderFromStorage(key: string, defaults: NavItem[]): NavItem[] {
@@ -75,11 +75,11 @@ function SortableNavItem({ item, collapsed }: { item: NavItem; collapsed: boolea
     zIndex: isDragging ? 50 : undefined,
   };
   return (
-    <SidebarMenuItem ref={setNodeRef} style={style}>
+    <SidebarMenuItem ref={setNodeRef} style={style} className="group/item">
       <SidebarMenuButton asChild>
         <div className="flex items-center w-full">
           <div {...attributes} {...listeners} className="touch-none cursor-grab mr-1 opacity-0 group-hover/item:opacity-100 transition-opacity">
-            <GripVertical className="w-3 h-3 text-muted-foreground" />
+            <GripVertical className="w-3 h-3 text-muted-foreground hover:text-primary transition-colors" />
           </div>
           <NavLink
             to={item.url}
@@ -168,7 +168,7 @@ export function AppSidebar() {
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
       <div className="p-4 flex items-center gap-3">
         <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center shrink-0">
-          <Wifi className="w-4 h-4 text-primary-foreground" />
+          <img src="/favicon.ico" alt="Handshake" className="w-5 h-5" />
         </div>
         {!collapsed && (
           <SidebarBrandName />
