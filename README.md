@@ -1,73 +1,52 @@
-# Welcome to your Lovable project
+To make your GitHub repository look professional for your thesis, use this structured description. It focuses on the technical architecture while highlighting the academic validation of the project.
+Handshake: NFC-Enabled Digital Business Card & Integrated CRM
+Project Overview
 
-## Project info
+Handshake is a modern, eco-friendly networking solution designed to replace traditional paper business cards. It utilizes NTAG215 NFC technology to trigger a custom-built digital profile, allowing users to seamlessly share contact information and capture leads directly into a centralized CRM system.  
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+This project was developed as a research initiative to address the high waste rate of paper cards (approx. 92%) and the manual inefficiencies of lead management in small businesses.  
+Key Features
 
-## How can I edit this code?
+    Contactless Exchange: Instant digital profile loading via NFC tap, compatible with modern iOS and Android devices without requiring a dedicated mobile app.  
 
-There are several ways of editing your application.
+    Integrated CRM Backend: Real-time lead capture and storage using Supabase, ensuring contact data is organized and accessible.  
 
-**Use Lovable**
+    Privacy-First Design: Compliant with the Data Privacy Act of 2012 (RA 10173), featuring granular, per-field opt-in consent toggles.  
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+    High Performance: Optimized via Next.js and Vercel for near-instantaneous loading states.  
 
-Changes made via Lovable will be committed automatically to this repo.
+Tech Stack
 
-**Use your preferred IDE**
+    Frontend: Next.js (React Framework)  
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+    Backend/Database: Supabase (PostgreSQL)  
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+    Deployment: Vercel  
 
-Follow these steps:
+    Hardware: NTAG215 NFC Tags  
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+Research Validation
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+The system was rigorously evaluated using the ISO/IEC 25010 Software Quality Model. Key findings from a study of 50 respondents include:  
 
-# Step 3: Install the necessary dependencies.
-npm i
+    Overall Satisfaction Score: 3.53/4.00 (High Acceptance).  
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+    Security Rating: 3.58/4.00 (Highest rated construct due to privacy controls).  
 
-**Edit a file directly in GitHub**
+    ANOVA Result: No significant difference in perception between students and professionals (p=0.554), proving universal utility.  
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Installation & Deployment
 
-**Use GitHub Codespaces**
+(You can customize this section with your actual repo instructions)
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+    Clone the repo: git clone [https://github.com/yourusername/handshake-nfc.git](https://github.com/yourusername/handshake-nfc.git)
 
-## What technologies are used for this project?
+    Install dependencies: npm install
 
-This project is built with:
+    Environment Variables: Configure your NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+    Run Locally: npm run dev
 
-## How can I deploy this project?
+License
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+This project was developed at De La Salle University-Dasmariñas. All research data and system architecture are documented in the accompanying thesis.
